@@ -678,7 +678,7 @@ class SphereShadowDataSource(DataSource):
         instance.set_shader_input("nb_of_occluders", nb_of_occluders)
 
 
-class ShadowBase(object):
+class ShadowBase:
     pass
 
 
@@ -865,21 +865,17 @@ class MultiShadows(ShadowBase):
         self.sphere_shadows = SphereShadows(target)
         self.shadow_map_shadows = ShadowMapShadows(target)
         self.rebuild_needed = False
-        self.had_sphere_occluder = False
         self.nb_updates = 0
 
     def clear_shadows(self):
         self.rings_shadows.clear_shadows()
         self.sphere_shadows.clear_shadows()
         self.shadow_map_shadows.clear_shadows()
-        self.shadow_map = None
         self.target.shader.remove_all_shadows(self.target.shape, self.target.appearance)
         self.rebuild_needed = True
-        self.had_sphere_occluder = False
 
     def start_update(self):
         if self.nb_updates == 0:
-            self.had_sphere_occluder = not self.sphere_shadows.empty()
             self.rings_shadows.start_update()
             self.sphere_shadows.start_update()
             self.shadow_map_shadows.start_update()
