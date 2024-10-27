@@ -590,8 +590,11 @@ class RingShadowDataSource(DataSource):
 
     def update(self, shape, instance, camera_pos, camera_rot):
         (texture, texture_size, texture_lod) = self.ring.appearance.texture.source.get_texture(self.ring.shape)
-        if texture is not None:
-            instance.set_shader_input('shadow_ring_tex', texture)
+        if texture is None:
+            texture = Texture()
+            texture.setup_2d_texture(1, 1, Texture.T_unsigned_byte, Texture.F_rgba8)
+            texture.set_clear_color(LColor(0, 0, 0, 0))
+        instance.set_shader_input('shadow_ring_tex', texture)
         normal = shape.owner.anchor.get_absolute_orientation().xform(LVector3d.up())
         instance.set_shader_input('ring_normal', normal)
         instance.set_shader_input(
