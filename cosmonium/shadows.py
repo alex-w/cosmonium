@@ -565,11 +565,18 @@ class RingShadowCaster(ShadowCasterBase):
     def __init__(self, light, ring):
         ShadowCasterBase.__init__(self, light)
         self.ring = ring
+        self.name = self.ring.owner.get_ascii_name()
 
     def is_analytic(self):
         # Although ring shadows are analytic, ity still requires the ring texture.
         # So we need to return False here to force the texture loading
         return False
+
+    def create_shader_component(self):
+        return ShaderRingsShadow()
+
+    def create_data_source(self):
+        return RingShadowDataSource(self.ring)
 
     def add_target(self, shape_object):
         shape_object.shadows.add_ring_shadow_caster(self)
@@ -673,6 +680,70 @@ class SphereShadowDataSource(DataSource):
 
 class ShadowBase(object):
     pass
+
+
+class RingsShadows(ShadowBase):
+
+    def __init__(self, target):
+        self.target = target
+        self.casters = []
+        self.old_casters = []
+        self.shader_components = {}
+        self.data_sources = {}
+        self.rebuild_needed = False
+        self.nb_updates = 0
+
+    def add_shadow_caster(self, caster):
+        if not caster.is_valid():
+            return
+        self.casters.append(caster)
+        if caster not in self.old_casters:
+            print("Add ring shadow caster", caster.name, "on", self.target.owner.get_friendly_name())
+            shadow_shader = caster.create_shader_component()
+            self.shader_components[caster] = shadow_shader
+            data_source = caster.create_data_source()
+            self.target.sources.add_source(data_source)
+            self.data_sources[caster] = data_source
+            self.target.shader.add_shadows(shadow_shader)
+            self.rebuild_needed = True
+        else:
+            self.old_casters.remove(caster)
+
+    def clear_shadows(self):
+        for caster in self.casters:
+            data_source = self.data_sources[caster]
+            self.target.sources.remove_source(data_source)
+        self.casters = []
+        self.shader_components = {}
+        self.data_sources = {}
+
+    def start_update(self):
+        if self.nb_updates == 0:
+            self.old_casters = self.casters
+            self.casters = []
+            self.rebuild_needed = False
+        self.nb_updates += 1
+
+    def end_update(self):
+        self.nb_updates -= 1
+        if self.nb_updates == 0:
+            for caster in self.old_casters:
+                print(
+                    "Remove ring shadow caster",
+                    caster.name,
+                    "on",
+                    self.target.owner.get_name(),
+                    self.target.get_name() or '',
+                )
+                shadow_shader = self.shader_components[caster]
+                self.target.shader.remove_shadows(self.target.shape, self.target.appearance, shadow_shader)
+                del self.shader_components[caster]
+                data_source = self.data_sources[caster]
+                self.target.sources.remove_source(data_source)
+                del self.data_sources[caster]
+                self.rebuild_needed = True
+            self.old_casters = []
+        return self.rebuild_needed
 
 
 class SphereShadows(ShadowBase):
@@ -790,7 +861,7 @@ class MultiShadows(ShadowBase):
 
     def __init__(self, target):
         self.target = target
-        self.ring_shadow = None
+        self.rings_shadows = RingsShadows(target)
         self.sphere_shadows = SphereShadows(target)
         self.shadow_map_shadows = ShadowMapShadows(target)
         self.rebuild_needed = False
@@ -798,10 +869,9 @@ class MultiShadows(ShadowBase):
         self.nb_updates = 0
 
     def clear_shadows(self):
+        self.rings_shadows.clear_shadows()
         self.sphere_shadows.clear_shadows()
         self.shadow_map_shadows.clear_shadows()
-        self.target.sources.remove_source_by_name('ring-shadow')
-        self.ring_shadow = None
         self.shadow_map = None
         self.target.shader.remove_all_shadows(self.target.shape, self.target.appearance)
         self.rebuild_needed = True
@@ -810,6 +880,7 @@ class MultiShadows(ShadowBase):
     def start_update(self):
         if self.nb_updates == 0:
             self.had_sphere_occluder = not self.sphere_shadows.empty()
+            self.rings_shadows.start_update()
             self.sphere_shadows.start_update()
             self.shadow_map_shadows.start_update()
         self.nb_updates += 1
@@ -817,19 +888,15 @@ class MultiShadows(ShadowBase):
     def end_update(self):
         self.nb_updates -= 1
         if self.nb_updates == 0:
+            rings_shadows_rebuild_needed = self.rings_shadows.end_update()
             shadow_map_rebuild_needed = self.shadow_map_shadows.end_update()
             sphere_shadows_rebuild_needed = self.sphere_shadows.end_update()
-            self.rebuild_needed = shadow_map_rebuild_needed or sphere_shadows_rebuild_needed
+            self.rebuild_needed = (
+                rings_shadows_rebuild_needed or shadow_map_rebuild_needed or sphere_shadows_rebuild_needed
+                )
 
     def add_ring_shadow_caster(self, shadow_caster):
-        if self.ring_shadow is None:
-            print("Add ring shadow component")
-            self.ring_shadow = shadow_caster
-            self.target.shader.add_shadows(ShaderRingsShadow())
-            self.target.sources.add_source(RingShadowDataSource(self.ring_shadow.ring))
-            self.rebuild_needed = True
-        elif self.ring_shadow != shadow_caster:
-            print("Can not switch ring shadow caster")
+        self.rings_shadows.add_shadow_caster(shadow_caster)
 
     def add_sphere_shadow_caster(self, shadow_caster):
         self.sphere_shadows.add_shadow_caster(shadow_caster)
