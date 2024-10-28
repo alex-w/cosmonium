@@ -406,7 +406,7 @@ class CartesianWorld(SimpleWorld):
         return CartesianAnchor(self.anchor_class, self, AbsoluteReferenceFrame())
 
     def create_scene_anchor(self):
-        return SceneAnchor(self.anchor, False, LColor(), True)
+        return SceneAnchor(self.get_ascii_name() + '-scene-anchor', self.anchor, False, LColor(), True)
 
     def get_terrain(self):
         return self.parent.get_terrain()

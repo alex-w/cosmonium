@@ -25,10 +25,10 @@ from ... import settings
 
 
 class SceneAnchor:
-    anchor_name = 'scene-anchor'
 
     def __init__(
         self,
+        name,
         anchor,
         support_offset_body_center,
         oid_color,
@@ -44,6 +44,10 @@ class SceneAnchor:
         self.background = background
         self.virtual_object = virtual_object
         self.spread_object = spread_object
+        if name is None:
+            name = 'scene-anchor'
+        self.name = name
+
         self.instance = None
         self.shifted_instance = None
         self.unshifted_instance = None
@@ -70,7 +74,7 @@ class SceneAnchor:
 
     def create_instance(self, scene_manager):
         if self.instance is None:
-            self.instance = NodePath(self.anchor_name)
+            self.instance = NodePath(self.name)
             scene_manager.attach_new_anchor(self.instance)
             self.shifted_instance = self.instance.attach_new_node('shifted-anchor')
             self.unshifted_instance = self.instance.attach_new_node('unshifted-anchor')
@@ -165,10 +169,9 @@ class SceneAnchor:
 
 
 class AbsoluteSceneAnchor(SceneAnchor):
-    anchor_name = 'static-anchor'
 
     def __init__(self, anchor):
-        SceneAnchor.__init__(self, anchor, False, None)
+        SceneAnchor.__init__(self, 'static-anchor', anchor, False, None)
 
     def update(self, scene_manager):
         if settings.camera_at_origin:
@@ -180,10 +183,9 @@ class AbsoluteSceneAnchor(SceneAnchor):
 
 
 class ObserverSceneAnchor(SceneAnchor):
-    anchor_name = 'observer-anchor'
 
     def __init__(self, anchor, background=False):
-        SceneAnchor.__init__(self, anchor, False, None, background=background)
+        SceneAnchor.__init__(self, 'observer-anchor', anchor, False, None, background=background)
 
     def update(self, scene_manager):
         if not settings.camera_at_origin:

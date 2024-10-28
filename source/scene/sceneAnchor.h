@@ -1,7 +1,7 @@
 /*
  * This file is part of Cosmonium.
  *
- * Copyright (C) 2018-2022 Laurent Deru.
+ * Copyright (C) 2018-2024 Laurent Deru.
  *
  * Cosmonium is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,13 +34,25 @@ class SceneManager;
 class SceneAnchor : public TypedObject, public ReferenceCount
 {
 PUBLISHED:
-  SceneAnchor(AnchorBase *anchor,
+  SceneAnchor(
+    AnchorBase *anchor,
+    bool support_offset_body_center,
+    LColor oid_color,
+    bool apply_orientation=false,
+    bool background=false,
+    bool virtual_object=false,
+    bool spread_object=false);
+
+  SceneAnchor(
+      const std::string &name,
+      AnchorBase *anchor,
       bool support_offset_body_center,
       LColor oid_color,
       bool apply_orientation=false,
       bool background=false,
       bool virtual_object=false,
       bool spread_object=false);
+
   virtual ~SceneAnchor(void);
 
   void add_light(NodePath light);
@@ -100,6 +112,7 @@ protected:
   NodePathCollection lights;
 
 PUBLISHED:
+  const std::string name;
   LPoint3d scene_position;
   LQuaternion scene_orientation;
   double scene_scale_factor;

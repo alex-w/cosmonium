@@ -1,7 +1,7 @@
 /*
  * This file is part of Cosmonium.
  *
- * Copyright (C) 2018-2022 Laurent Deru.
+ * Copyright (C) 2018-2024 Laurent Deru.
  *
  * Cosmonium is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,13 +27,43 @@
 TypeHandle SceneAnchor::_type_handle;
 
 
-SceneAnchor::SceneAnchor(AnchorBase *anchor,
+SceneAnchor::SceneAnchor(
+    AnchorBase *anchor,
     bool support_offset_body_center,
     LColor oid_color,
     bool apply_orientation,
     bool background,
     bool virtual_object,
     bool spread_object) :
+    name("scene-anchor"),
+    anchor(anchor),
+    background(background),
+    support_offset_body_center(support_offset_body_center),
+    apply_orientation(apply_orientation),
+    has_instance(false),
+    virtual_object(virtual_object),
+    spread_object(spread_object),
+    scene_position(0),
+    scene_orientation(LQuaterniond::ident_quat()),
+    scene_scale_factor(1),
+    scene_rel_position(0),
+    world_body_center_offset(0),
+    scene_body_center_offset(0),
+    oid_color(oid_color)
+{
+}
+
+
+SceneAnchor::SceneAnchor(
+    const std::string &name,
+    AnchorBase *anchor,
+    bool support_offset_body_center,
+    LColor oid_color,
+    bool apply_orientation,
+    bool background,
+    bool virtual_object,
+    bool spread_object) :
+    name(name),
     anchor(anchor),
     background(background),
     support_offset_body_center(support_offset_body_center),
@@ -84,7 +114,7 @@ void
 SceneAnchor::create_instance(SceneManager *scene_manager)
 {
   if (!has_instance) {
-    instance = NodePath("scene-anchor");
+    instance = NodePath(name);
     scene_manager->attach_new_anchor(instance);
     shifted_instance = instance.attach_new_node("shifted-anchor");
     unshifted_instance = instance.attach_new_node("unshifted-anchor");
@@ -309,7 +339,7 @@ TypeHandle AbsoluteSceneAnchor::_type_handle;
 
 
 AbsoluteSceneAnchor::AbsoluteSceneAnchor(AnchorBase *anchor) :
-    SceneAnchor(anchor, false, LColor())
+    SceneAnchor(std::string("static-anchor"), anchor, false, LColor())
 {
 }
 
@@ -333,7 +363,7 @@ TypeHandle ObserverSceneAnchor::_type_handle;
 
 
 ObserverSceneAnchor::ObserverSceneAnchor(AnchorBase *anchor, bool background) :
-    SceneAnchor(anchor, false, LColor(), false, background)
+    SceneAnchor(std::string("observer-anchor"), anchor, false, LColor(), false, background)
 {
 }
 
