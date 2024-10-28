@@ -452,6 +452,7 @@ class Cosmonium(CosmoniumBase):
         self.worlds.add_world(self.background)
         self.labels = Labels()
 
+        print("Use color picking:", settings.color_picking)
         if settings.color_picking:
             self.oid_texture = Texture()
             self.oid_texture.setup_2d_texture(
