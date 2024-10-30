@@ -58,19 +58,27 @@ PUBLISHED:
 class CubePatchGeneratorBase
 {
 protected:
-  void
-  make_adapted_square_primitives(PT(GeomTriangles) prim,
+  template <typename T>
+  T *
+  make_adapted_square_primitives(T *ptr,
       unsigned int inner, unsigned int nb_vertices, LVecBase4i ratio);
 
-  void
-  make_adapted_square_primitives_skirt(PT(GeomTriangles) prim,
+  template <typename T>
+  T *
+  make_adapted_square_primitives_skirt(T *ptr,
       unsigned int inner, unsigned int nb_vertices, LVecBase4i ratio);
 
-  void
-  make_primitives(PT(GeomTriangles) prim, unsigned int inner, unsigned int nb_vertices);
+  template <typename T>
+  T *
+  make_primitives(T *ptr, unsigned int inner, unsigned int nb_vertices);
 
-  void
-  make_primitives_skirt(PT(GeomTriangles) prim, unsigned int inner, unsigned int nb_vertices);
+  template <typename T>
+  T *
+  make_primitives_skirt(T *ptr, unsigned int inner, unsigned int nb_vertices);
+
+  template <typename T>
+  inline T *
+  add_vertices(T *ptr, unsigned int a, unsigned int b, unsigned int c);
 };
 
 class QCSPatchGenerator : public CubePatchGeneratorBase

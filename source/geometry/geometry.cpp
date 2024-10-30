@@ -190,20 +190,32 @@ UVPatchGenerator::make(LVector3d axes, unsigned int rings, unsigned int sectors,
     return NodePath(node);
 }
 
-void
-CubePatchGeneratorBase::make_primitives(PT(GeomTriangles) prim, unsigned int inner, unsigned int nb_vertices)
+template <typename T>
+T *
+CubePatchGeneratorBase::add_vertices(T *ptr, unsigned int a, unsigned int b, unsigned int c) {
+    *ptr++ = a;
+    *ptr++ = b;
+    *ptr++ = c;
+    return ptr;
+}
+
+template <typename T>
+T *
+CubePatchGeneratorBase::make_primitives(T *ptr, unsigned int inner, unsigned int nb_vertices)
 {
     for (unsigned int x = 0; x < inner; ++x) {
         for (unsigned int y = 0; y < inner; ++y) {
             unsigned int v = nb_vertices * x + y;
-            prim->add_vertices(v, v + nb_vertices, v + 1);
-            prim->add_vertices(v + 1, v + nb_vertices, v + nb_vertices + 1);
+            ptr = add_vertices(ptr, v, v + nb_vertices, v + 1);
+            ptr = add_vertices(ptr, v + 1, v + nb_vertices, v + nb_vertices + 1);
         }
     }
+    return ptr;
 }
 
-void
-CubePatchGeneratorBase::make_adapted_square_primitives(PT(GeomTriangles) prim,
+template <typename T>
+T *
+CubePatchGeneratorBase::make_adapted_square_primitives(T *ptr,
         unsigned int inner, unsigned int nb_vertices, LVecBase4i ratio)
 {
     for (unsigned int x = 0; x < inner; ++x) {
@@ -214,75 +226,77 @@ CubePatchGeneratorBase::make_adapted_square_primitives(PT(GeomTriangles) prim,
                 if (y == 0) {
                     unsigned int j = 1;
                     if (ratio[i] == 1 && ratio[j] == 1) {
-                        prim->add_vertices(v, v + nb_vertices, v + 1);
-                        prim->add_vertices(v + 1, v + nb_vertices, v + nb_vertices + 1);
+                        ptr = add_vertices(ptr, v, v + nb_vertices, v + 1);
+                        ptr = add_vertices(ptr, v + 1, v + nb_vertices, v + nb_vertices + 1);
                     } else {
-                        prim->add_vertices(v, v + nb_vertices * ratio[j], v + nb_vertices + 1);
-                        prim->add_vertices(v, v + nb_vertices + 1, v + ratio[i]);
+                        ptr = add_vertices(ptr, v, v + nb_vertices * ratio[j], v + nb_vertices + 1);
+                        ptr = add_vertices(ptr, v, v + nb_vertices + 1, v + ratio[i]);
                     }
                 } else if (y == inner - 1) {
                     unsigned int j = 3;
                     if (ratio[i] == 1) {
-                        prim->add_vertices(v, v + nb_vertices, v + 1);
+                        ptr = add_vertices(ptr, v, v + nb_vertices, v + 1);
                     }
-                    prim->add_vertices(v + 1, v + nb_vertices * ratio[j], v + nb_vertices * ratio[j] + 1);
+                    ptr = add_vertices(ptr, v + 1, v + nb_vertices * ratio[j], v + nb_vertices * ratio[j] + 1);
                 } else {
                     unsigned int vp = nb_vertices * x + int(y / ratio[i]) * ratio[i];
                     if ((y % ratio[i]) == 0) {
-                        prim->add_vertices(v, v + nb_vertices, v + ratio[i]);
+                        ptr = add_vertices(ptr, v, v + nb_vertices, v + ratio[i]);
                     }
-                    prim->add_vertices(vp + ratio[i], v + nb_vertices, v + nb_vertices + 1);
+                    ptr = add_vertices(ptr, vp + ratio[i], v + nb_vertices, v + nb_vertices + 1);
                 }
             } else if (x == inner - 1) {
                 unsigned int i = 2;
                 if (y == 0) {
                     unsigned int j = 1;
                     if (ratio[j] == 1) {
-                        prim->add_vertices(v, v + nb_vertices, v + 1);
+                        ptr = add_vertices(ptr, v, v + nb_vertices, v + 1);
                     }
-                    prim->add_vertices(v + ratio[i], v + nb_vertices, v + nb_vertices + ratio[i]);
+                    ptr = add_vertices(ptr, v + ratio[i], v + nb_vertices, v + nb_vertices + ratio[i]);
                 } else if (y == inner - 1) {
                     unsigned int j = 3;
                     if (ratio[i] == 1 && ratio[j] == 1) {
-                        prim->add_vertices(v, v + nb_vertices, v + 1);
-                        prim->add_vertices(v + 1, v + nb_vertices, v + nb_vertices + 1);
+                        ptr = add_vertices(ptr, v, v + nb_vertices, v + 1);
+                        ptr = add_vertices(ptr, v + 1, v + nb_vertices, v + nb_vertices + 1);
                     } else {
                         unsigned int vpx = nb_vertices * (x / ratio[j]) * ratio[j] + y;
-                        prim->add_vertices(vpx + 1, v, v + nb_vertices + 1);
+                        ptr = add_vertices(ptr, vpx + 1, v, v + nb_vertices + 1);
                         unsigned int vpy = nb_vertices * x + ((y / ratio[i]) * ratio[i]);
-                        prim->add_vertices(v, vpy + nb_vertices, v + nb_vertices + 1);
+                        ptr = add_vertices(ptr, v, vpy + nb_vertices, v + nb_vertices + 1);
                     }
                 } else {
                     unsigned int vp = nb_vertices * x + ((y / ratio[i]) * ratio[i]);
-                    prim->add_vertices(v, vp + nb_vertices, v + 1);
+                    ptr = add_vertices(ptr, v, vp + nb_vertices, v + 1);
                     if (((y + 1) % ratio[i]) == 0) {
-                        prim->add_vertices(v + 1, vp + nb_vertices, v + nb_vertices + 1);
+                        ptr = add_vertices(ptr, v + 1, vp + nb_vertices, v + nb_vertices + 1);
                     }
                 }
             } else if (y == 0) {
                 unsigned int i = 1;
                 unsigned int vp = nb_vertices * (x / ratio[i]) * ratio[i] + y;
-                prim->add_vertices(v + 1, vp + nb_vertices * ratio[i], v + nb_vertices + 1);
+                ptr = add_vertices(ptr, v + 1, vp + nb_vertices * ratio[i], v + nb_vertices + 1);
                 if ((x % ratio[i]) == 0) {
-                    prim->add_vertices(v, v + nb_vertices * ratio[i], v + 1);
+                    ptr = add_vertices(ptr, v, v + nb_vertices * ratio[i], v + 1);
                 }
             } else if (y == inner - 1) {
                 unsigned int i = 3;
                 unsigned int vp = nb_vertices * (x / ratio[i]) * ratio[i] + y;
-                prim->add_vertices(v, v + nb_vertices, vp + 1);
+                ptr = add_vertices(ptr, v, v + nb_vertices, vp + 1);
                 if (((x + 1) % ratio[i]) == 0) {
-                    prim->add_vertices(vp + 1, v + nb_vertices, v + nb_vertices + 1);
+                    ptr = add_vertices(ptr, vp + 1, v + nb_vertices, v + nb_vertices + 1);
                 }
             } else {
-                prim->add_vertices(v, v + nb_vertices, v + 1);
-                prim->add_vertices(v + 1, v + nb_vertices, v + nb_vertices + 1);
+                ptr = add_vertices(ptr, v, v + nb_vertices, v + 1);
+                ptr = add_vertices(ptr, v + 1, v + nb_vertices, v + nb_vertices + 1);
             }
         }
     }
+    return ptr;
 }
 
-void
-CubePatchGeneratorBase::make_adapted_square_primitives_skirt(PT(GeomTriangles) prim,
+template <typename T>
+T *
+CubePatchGeneratorBase::make_adapted_square_primitives_skirt(T *ptr,
         unsigned int inner, unsigned int nb_vertices, LVecBase4i ratio)
 {
     for (unsigned int a = 0; a < 4; ++a) {
@@ -310,31 +324,33 @@ CubePatchGeneratorBase::make_adapted_square_primitives_skirt(PT(GeomTriangles) p
             unsigned v = nb_vertices * x + y;
             if (a == 0) {
                 if ((y % ratio[i]) == 0) {
-                    prim->add_vertices(v, v + ratio[i], skirt);
-                    prim->add_vertices(skirt, v + ratio[i], skirt + ratio[i]);
+                    ptr = add_vertices(ptr, v, v + ratio[i], skirt);
+                    ptr = add_vertices(ptr, skirt, v + ratio[i], skirt + ratio[i]);
                 }
             } else if (a == 1) {
                 if ((y % ratio[i]) == 0) {
-                    prim->add_vertices(v + nb_vertices, skirt, v + nb_vertices + ratio[i]);
-                    prim->add_vertices(v + nb_vertices + ratio[i], skirt, skirt + ratio[i]);
+                    ptr = add_vertices(ptr, v + nb_vertices, skirt, v + nb_vertices + ratio[i]);
+                    ptr = add_vertices(ptr, v + nb_vertices + ratio[i], skirt, skirt + ratio[i]);
                 }
             } else if (a == 2) {
                 if ((x % ratio[i]) == 0) {
-                    prim->add_vertices(v, skirt, v + nb_vertices * ratio[i]);
-                    prim->add_vertices(v + nb_vertices * ratio[i], skirt, skirt + ratio[i]);
+                    ptr = add_vertices(ptr, v, skirt, v + nb_vertices * ratio[i]);
+                    ptr = add_vertices(ptr, v + nb_vertices * ratio[i], skirt, skirt + ratio[i]);
                 }
             } else if (a == 3) {
                 if ((x % ratio[i]) == 0) {
-                    prim->add_vertices(skirt + ratio[i], v + 1, v + nb_vertices * ratio[i] + 1);
-                    prim->add_vertices(skirt, v + 1, skirt + ratio[i]);
+                    ptr = add_vertices(ptr, skirt + ratio[i], v + 1, v + nb_vertices * ratio[i] + 1);
+                    ptr = add_vertices(ptr, skirt, v + 1, skirt + ratio[i]);
                 }
             }
         }
     }
+    return ptr;
 }
 
-void
-CubePatchGeneratorBase::make_primitives_skirt(PT(GeomTriangles) prim,
+template <typename T>
+T *
+CubePatchGeneratorBase::make_primitives_skirt(T *ptr,
         unsigned int inner, unsigned int nb_vertices)
 {
     for (unsigned int a = 0; a < 4; ++a) {
@@ -357,20 +373,21 @@ CubePatchGeneratorBase::make_primitives_skirt(PT(GeomTriangles) prim,
             }
             unsigned int v = nb_vertices * x + y;
             if (a == 0) {
-                prim->add_vertices(v, v + 1, skirt);
-                prim->add_vertices(skirt, v + 1, skirt + 1);
+                ptr = add_vertices(ptr, v, v + 1, skirt);
+                ptr = add_vertices(ptr, skirt, v + 1, skirt + 1);
             } else if (a == 1) {
-                prim->add_vertices(v + nb_vertices, skirt, v + nb_vertices + 1);
-                prim->add_vertices(v + nb_vertices + 1, skirt, skirt + 1);
+                ptr = add_vertices(ptr, v + nb_vertices, skirt, v + nb_vertices + 1);
+                ptr = add_vertices(ptr, v + nb_vertices + 1, skirt, skirt + 1);
             } else if (a == 2) {
-                prim->add_vertices(v, skirt, v + nb_vertices);
-                prim->add_vertices(v + nb_vertices, skirt, skirt + 1);
+                ptr = add_vertices(ptr, v, skirt, v + nb_vertices);
+                ptr = add_vertices(ptr, v + nb_vertices, skirt, skirt + 1);
             } else if (a == 3) {
-                prim->add_vertices(skirt + 1, v + 1, v + nb_vertices + 1);
-                prim->add_vertices(skirt, v + 1, skirt + 1);
+                ptr = add_vertices(ptr, skirt + 1, v + 1, v + nb_vertices + 1);
+                ptr = add_vertices(ptr, skirt, v + 1, skirt + 1);
             }
         }
     }
+    return ptr;
 }
 
 QCSPatchGenerator::QCSPatchGenerator()
@@ -542,9 +559,6 @@ QCSPatchGenerator::make(LVector3d axes, TessellationInfo tessellation,
     GeomVertexWriter gtanw = GeomVertexWriter(gvd, InternalName::get_tangent());
     GeomVertexWriter gbiw = GeomVertexWriter(gvd, InternalName::get_binormal());
     PT(GeomTriangles) prim = new GeomTriangles(Geom::UH_static);
-    if (nb_prims != 0) {
-        prim->reserve_num_vertices(nb_prims);
-    }
 
     LVector3d offset_vector;
     if (has_offset) {
@@ -611,15 +625,18 @@ QCSPatchGenerator::make(LVector3d axes, TessellationInfo tessellation,
         }
     }
 
+    auto handle = prim->modify_vertices_handle(Thread::get_current_thread());
+    handle->set_num_rows(nb_prims * 6);
+    uint16_t *ptr = (uint16_t *)handle->get_write_pointer();
     if (use_patch_adaptation) {
-        make_adapted_square_primitives(prim, tessellation.inner, nb_vertices, tessellation.ratio);
+        ptr = make_adapted_square_primitives(ptr, tessellation.inner, nb_vertices, tessellation.ratio);
         if (use_patch_skirts) {
-            make_adapted_square_primitives_skirt(prim, tessellation.inner, nb_vertices, tessellation.ratio);
+            ptr = make_adapted_square_primitives_skirt(ptr, tessellation.inner, nb_vertices, tessellation.ratio);
         }
     } else {
-        make_primitives(prim, tessellation.inner, nb_vertices);
+        ptr = make_primitives(ptr, tessellation.inner, nb_vertices);
         if (use_patch_skirts) {
-            make_primitives_skirt(prim, tessellation.inner, nb_vertices);
+            ptr = make_primitives_skirt(ptr, tessellation.inner, nb_vertices);
         }
     }
 
@@ -822,9 +839,6 @@ ImprovedQCSPatchGenerator::make(LVector3d axes, TessellationInfo tessellation,
     GeomVertexWriter gtanw = GeomVertexWriter(gvd, InternalName::get_tangent());
     GeomVertexWriter gbiw = GeomVertexWriter(gvd, InternalName::get_binormal());
     PT(GeomTriangles) prim = new GeomTriangles(Geom::UH_static);
-    if (nb_prims != 0) {
-        prim->reserve_num_vertices(nb_prims);
-    }
 
     LVector3d offset_vector;
     if (has_offset) {
@@ -895,15 +909,18 @@ ImprovedQCSPatchGenerator::make(LVector3d axes, TessellationInfo tessellation,
         }
     }
 
+    auto handle = prim->modify_vertices_handle(Thread::get_current_thread());
+    handle->set_num_rows(nb_prims * 6);
+    uint16_t *ptr = (uint16_t *)handle->get_write_pointer();
     if (use_patch_adaptation) {
-        make_adapted_square_primitives(prim, tessellation.inner, nb_vertices, tessellation.ratio);
+        ptr = make_adapted_square_primitives(ptr, tessellation.inner, nb_vertices, tessellation.ratio);
         if (use_patch_skirts) {
-            make_adapted_square_primitives_skirt(prim, tessellation.inner, nb_vertices, tessellation.ratio);
+            ptr = make_adapted_square_primitives_skirt(ptr, tessellation.inner, nb_vertices, tessellation.ratio);
         }
     } else {
-        make_primitives(prim, tessellation.inner, nb_vertices);
+        ptr = make_primitives(ptr, tessellation.inner, nb_vertices);
         if (use_patch_skirts) {
-            make_primitives_skirt(prim, tessellation.inner, nb_vertices);
+            ptr = make_primitives_skirt(ptr, tessellation.inner, nb_vertices);
         }
     }
 
@@ -995,9 +1012,6 @@ TilePatchGenerator::make(double size, TessellationInfo tessellation,
     GeomVertexWriter gtanw = GeomVertexWriter(gvd, InternalName::get_tangent());
     GeomVertexWriter gbiw = GeomVertexWriter(gvd, InternalName::get_binormal());
     PT(GeomTriangles) prim = new GeomTriangles(Geom::UH_static);
-    if (nb_prims != 0) {
-        prim->reserve_num_vertices(nb_prims);
-    }
 
     for (unsigned int i = 0; i < nb_vertices; ++i) {
         double u = float(i) / tessellation.inner;
@@ -1046,15 +1060,18 @@ TilePatchGenerator::make(double size, TessellationInfo tessellation,
         }
     }
 
+    auto handle = prim->modify_vertices_handle(Thread::get_current_thread());
+    handle->set_num_rows(nb_prims * 6);
+    uint16_t *ptr = (uint16_t *)handle->get_write_pointer();
     if (use_patch_adaptation) {
-        make_adapted_square_primitives(prim, tessellation.inner, nb_vertices, tessellation.ratio);
+        ptr = make_adapted_square_primitives(ptr, tessellation.inner, nb_vertices, tessellation.ratio);
         if (use_patch_skirts) {
-            make_adapted_square_primitives_skirt(prim, tessellation.inner, nb_vertices, tessellation.ratio);
+            ptr = make_adapted_square_primitives_skirt(ptr, tessellation.inner, nb_vertices, tessellation.ratio);
         }
     } else {
-        make_primitives(prim, tessellation.inner, nb_vertices);
+        ptr = make_primitives(ptr, tessellation.inner, nb_vertices);
         if (use_patch_skirts) {
-            make_primitives_skirt(prim, tessellation.inner, nb_vertices);
+            ptr = make_primitives_skirt(ptr, tessellation.inner, nb_vertices);
         }
     }
 
