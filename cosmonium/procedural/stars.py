@@ -26,13 +26,13 @@ from ..components.elements.surfaces import EllipsoidFlatSurface
 from ..objects.surface_factory import SurfaceFactory
 from ..shaders.rendering import RenderingShader
 from ..shaders.lighting.emission import PureEmissionLightingModel
+from ..patchedshapes.lodcontrol import VertexSizeLodControl
 from ..patchedshapes.patchedshapes import SquaredDistanceSquareShape, SquaredDistanceSquarePatchFactory
-from ..patchedshapes.patchedshapes import VertexSizeLodControl
 from ..textures import SurfaceTexture
 from .. import settings
 
-from .textures import NoiseTextureGenerator, PatchedProceduralVirtualTextureSource
 from .shadernoise import GrayTarget
+from .textures import NoiseTextureGenerator, PatchedProceduralVirtualTextureSource
 
 
 class ProceduralStarSurfaceFactory(SurfaceFactory):

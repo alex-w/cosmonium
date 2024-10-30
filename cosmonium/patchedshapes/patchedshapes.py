@@ -35,23 +35,10 @@ from ..shapes.base import Shape
 from ..textures import TexCoord
 from .. import settings
 
+from .cullingfrustum import CullingFrustum, HorizonCullingFrustum
+from .lodresult import LodResult
 from .patchneighbours import PatchNeighbours
-
-
-try:
-    from cosmonium_engine import QuadTreeNode
-    from cosmonium_engine import CullingFrustumBase, CullingFrustum, HorizonCullingFrustum
-    from cosmonium_engine import LodResult
-    from cosmonium_engine import LodControl, TextureLodControl, TextureOrVertexSizeLodControl
-    from cosmonium_engine import VertexSizeLodControl, VertexSizeMaxDistanceLodControl
-except ImportError as e:
-    print("WARNING: Could not load Patch C implementation, fallback on python implementation")
-    print("\t", e)
-    from ...pyrendering.quadtree import QuadTreeNode
-    from ...pyrendering.cullingfrustum import CullingFrustumBase, CullingFrustum, HorizonCullingFrustum  # noqa: F401
-    from ...pyrendering.lodresult import LodResult
-    from ...pyrendering.lodcontrol import LodControl, TextureLodControl, TextureOrVertexSizeLodControl  # noqa: F401
-    from ...pyrendering.lodcontrol import VertexSizeLodControl, VertexSizeMaxDistanceLodControl  # noqa: F401
+from .quadtree import QuadTreeNode
 
 
 class BoundingBoxShape:

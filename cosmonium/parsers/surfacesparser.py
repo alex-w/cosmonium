@@ -26,8 +26,8 @@ from ..components.elements.surfaces import FlatSurface, HeightmapFlatSurface
 from ..components.elements.surface_categories import surfaceCategoryDB, SurfaceCategory
 from ..heightmap import heightmapRegistry
 from ..opengl import OpenGLConfig
-from ..patchedshapes.patchedshapes import VertexSizeLodControl, VertexSizeMaxDistanceLodControl
-from ..patchedshapes.patchedshapes import TextureOrVertexSizeLodControl
+from ..patchedshapes.lodcontrol import VertexSizeLodControl, VertexSizeMaxDistanceLodControl
+from ..patchedshapes.lodcontrol import TextureOrVertexSizeLodControl
 from ..patchedshapes.tiles import TileFactory, GpuPatchTerrainLayerFactory, MeshTerrainLayerFactory
 from ..shaders.rendering import RenderingShader
 from ..shaders.tessellation import ConstantTessellationControl

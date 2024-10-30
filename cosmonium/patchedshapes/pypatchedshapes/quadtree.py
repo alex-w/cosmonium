@@ -18,7 +18,7 @@
 #
 
 
-from ..pstats import pstat
+from ...pstats import pstat
 
 
 class QuadTreeNode:
