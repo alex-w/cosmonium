@@ -23,7 +23,7 @@ from math import pi
 from panda3d.core import LVector3, LColor, LQuaterniond
 from panda3d.core import DirectionalLight
 
-from .datasource import DataSource
+from .entities.datasource import DataSource
 from .shaders.data_source.global_lights import GlobalLightsShaderDataSource
 from . import settings
 

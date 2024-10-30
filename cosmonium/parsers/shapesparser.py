@@ -20,13 +20,14 @@
 
 from panda3d.core import LVector3d, LQuaterniond
 
-from ..patchedshapes import PatchedSpherePatchFactory, SquaredDistanceSquarePatchFactory, NormalizedSquarePatchFactory
-from ..patchedshapes import PatchedSphereShape, NormalizedSquareShape, SquaredDistanceSquareShape
+from ..patchedshapes.patchedshapes import PatchedSpherePatchFactory, PatchedSphereShape
+from ..patchedshapes.patchedshapes import SquaredDistanceSquarePatchFactory, SquaredDistanceSquareShape
+from ..patchedshapes.patchedshapes import NormalizedSquarePatchFactory, NormalizedSquareShape
+from ..patchedshapes.tiles import TiledShape
 from ..procedural.raymarching import RayMarchingShape
 from ..shapes.mesh import MeshShape
 from ..shapes.spheres import SphereShape, IcoSphereShape
 from ..spaceengine.shapes import SpaceEnginePatchedSquareShape
-from ..tiles import TiledShape
 
 from .yamlparser import YamlModuleParser
 

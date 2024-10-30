@@ -21,7 +21,7 @@
 from panda3d.core import LVector3d
 
 from ...appearances import Appearance
-from ...shapes.shape_object import ShapeObject
+from ...entities.shape_object import ShapeObject
 from ...shapes.mesh import MeshShape
 from ...utils import TransparencyBlend
 

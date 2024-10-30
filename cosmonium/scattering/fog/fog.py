@@ -21,7 +21,7 @@
 from math import sqrt
 from panda3d.core import LColor, LVector3
 
-from ...datasource import DataSource
+from ...entities.datasource import DataSource
 from ...shaders.lighting.scattering import ScatteringInterface as ShaderScatteringInterface
 from ...shaders.scattering import AtmosphericScattering
 from ..scattering import ScatteringBase

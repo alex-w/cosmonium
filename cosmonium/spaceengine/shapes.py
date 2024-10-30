@@ -17,7 +17,7 @@
 # along with Cosmonium.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-from ..patchedshapes import SquarePatchBase, NormalizedSquareShape
+from ..patchedshapes.patchedshapes import SquarePatchBase, NormalizedSquareShape
 from ..geometry import geometry
 
 

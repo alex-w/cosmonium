@@ -20,7 +20,7 @@
 
 from ..components.elements.rings import Rings
 from ..components.elements.clouds import Clouds
-from ..patchedshapes import VertexSizeLodControl, TextureOrVertexSizeLodControl
+from ..patchedshapes.patchedshapes import VertexSizeLodControl, TextureOrVertexSizeLodControl
 from ..shaders.rendering import RenderingShader
 from .. import settings
 

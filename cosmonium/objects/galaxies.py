@@ -30,7 +30,7 @@ from random import random, gauss, choice, seed
 
 from ..appearances import AppearanceBase
 from ..components.elements.surfaces import EllipsoidFlatSurface
-from ..datasource import DataSource
+from ..entities.datasource import DataSource
 from ..parameters import AutoUserParameter, UserParameter
 from ..sprites import ExpPointSprite
 from ..shaders.point_control import PointControl

@@ -21,8 +21,8 @@
 from direct.task.TaskManagerGlobal import taskMgr
 from panda3d.core import LVector2, AsyncFuture
 
+from ..textures import TexCoord
 from .datasource import DataSource
-from .textures import TexCoord
 
 
 class PatchData:

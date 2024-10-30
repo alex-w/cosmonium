@@ -18,11 +18,11 @@
 #
 
 
+from ..entities.shape_object import ShapeObject
 from ..opengl import OpenGLConfig
 from ..procedural.populator import RandomObjectPlacer
 from ..procedural.populator import CpuTerrainPopulator, GpuTerrainPopulator
 from ..shaders.rendering import RenderingShader
-from ..shapes.shape_object import ShapeObject
 from ..shapes.mesh import MeshShape
 
 from .appearancesparser import AppearanceYamlParser

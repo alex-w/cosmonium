@@ -20,13 +20,13 @@
 
 from panda3d.core import LVector3, LMatrix4
 
+from ..dircontext import defaultDirContext
+from ..patchedshapes.patchedshapes import SquarePatchBase
+from ..parameters import ParametersGroup, AutoUserParameter
+from ..pipeline.shaders import GeneratorVertexShader
 from ..shaders.base import StructuredShader, ShaderProgram
 from ..shaders.component import ShaderComponent
-from ..patchedshapes import SquarePatchBase
-from ..pipeline.shaders import GeneratorVertexShader
-from ..dircontext import defaultDirContext
 from ..textures import TexCoord
-from ..parameters import ParametersGroup, AutoUserParameter
 
 
 class NoiseSource(object):

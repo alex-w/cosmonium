@@ -20,8 +20,8 @@
 
 from panda3d.core import LVector2
 
-from .dircontext import defaultDirContext
-from .textures import TextureBase
+from ..dircontext import defaultDirContext
+from ..textures import TextureBase
 
 
 class ShapeData:

@@ -22,7 +22,7 @@ from collections import deque
 from panda3d.core import Texture
 import struct
 
-from .shaders.data_source.data_store import DataStoreManagerShaderDataSource, ParametersDataStoreShaderDataSource
+from ..shaders.data_source.data_store import DataStoreManagerShaderDataSource, ParametersDataStoreShaderDataSource
 
 
 class PatchDataStoreManager:

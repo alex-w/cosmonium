@@ -22,14 +22,14 @@ import numpy
 from panda3d.core import Texture, LColor
 import traceback
 
-from .patcheddata import PatchData, PatchedData
-from .shapedata import TextureShapeDataBase
+from .dircontext import defaultDirContext
+from .entities.shapedata import TextureShapeDataBase
+from .entities.patcheddata import PatchData, PatchedData
+from .filters import BilinearFilter
+from .interpolators import HardwareInterpolator
 from .shaders.data_source.heightmap import HeightmapShaderDataSource
 from .textures import TexCoord, AutoTextureSource, TextureBase, HeightMapTexture
 from .textures import TextureConfiguration
-from .interpolators import HardwareInterpolator
-from .filters import BilinearFilter
-from .dircontext import defaultDirContext
 
 
 # TODO: HeightmapPatch has common code with Heightmap and TextureHeightmapBase, this should be refactored

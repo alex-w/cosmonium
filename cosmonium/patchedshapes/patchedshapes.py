@@ -26,15 +26,16 @@ from panda3d.core import LColor, LQuaterniond, LQuaternion, LMatrix4, LVecBase4i
 from panda3d.core import NodePath
 from panda3d.core import RenderState, ColorAttrib, RenderModeAttrib, CullFaceAttrib, ShaderAttrib
 
-from .data_store import PatchDataStoreManager
-from .datasource import DataSource
-from .geometry import geometry
-from .mathutil.ellipse import EllipseCircumRamanujan2ndApprox
+from ..entities.datasource import DataSource
+from ..entities.data_store import PatchDataStoreManager
+from ..geometry import geometry
+from ..mathutil.ellipse import EllipseCircumRamanujan2ndApprox
+from ..pstats import pstat
+from ..shapes.base import Shape
+from ..textures import TexCoord
+from .. import settings
+
 from .patchneighbours import PatchNeighbours
-from .pstats import pstat
-from .shapes.base import Shape
-from .textures import TexCoord
-from . import settings
 
 
 try:
@@ -46,11 +47,11 @@ try:
 except ImportError as e:
     print("WARNING: Could not load Patch C implementation, fallback on python implementation")
     print("\t", e)
-    from .pyrendering.quadtree import QuadTreeNode
-    from .pyrendering.cullingfrustum import CullingFrustumBase, CullingFrustum, HorizonCullingFrustum  # noqa: F401
-    from .pyrendering.lodresult import LodResult
-    from .pyrendering.lodcontrol import LodControl, TextureLodControl, TextureOrVertexSizeLodControl  # noqa: F401
-    from .pyrendering.lodcontrol import VertexSizeLodControl, VertexSizeMaxDistanceLodControl  # noqa: F401
+    from ...pyrendering.quadtree import QuadTreeNode
+    from ...pyrendering.cullingfrustum import CullingFrustumBase, CullingFrustum, HorizonCullingFrustum  # noqa: F401
+    from ...pyrendering.lodresult import LodResult
+    from ...pyrendering.lodcontrol import LodControl, TextureLodControl, TextureOrVertexSizeLodControl  # noqa: F401
+    from ...pyrendering.lodcontrol import VertexSizeLodControl, VertexSizeMaxDistanceLodControl  # noqa: F401
 
 
 class BoundingBoxShape:

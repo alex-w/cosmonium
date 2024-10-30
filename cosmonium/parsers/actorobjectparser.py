@@ -18,9 +18,9 @@
 #
 
 
+from ..entities.shape_object import ShapeObject
 from ..shaders.rendering import RenderingShader
 from ..shapes.mesh import MeshShape
-from ..shapes.shape_object import ShapeObject
 
 from .actorshapeparser import ActorShapeYamlParser
 from .appearancesparser import AppearanceYamlParser

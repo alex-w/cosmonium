@@ -22,8 +22,8 @@ from direct.task.TaskManagerGlobal import taskMgr
 from panda3d.core import Material, TextureStage, Texture, GeomNode, InternalName
 from panda3d.core import TransparencyAttrib
 
-from .datasource import DataSource
 from .dircontext import defaultDirContext
+from .entities.datasource import DataSource
 from .parameters import ParametersGroup, AutoUserParameter
 from .shaders.data_source.panda import PandaShaderDataSource
 from .textures import TextureBase, WrapperTexture, SurfaceTexture, TransparentTexture, EmissionTexture

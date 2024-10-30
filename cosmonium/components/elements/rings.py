@@ -20,9 +20,9 @@
 
 from panda3d.core import LQuaternion
 
+from ...entities.shape_object import ShapeObject
 from ...shadows import RingShadowCaster
 from ...shapes.rings import RingsShape
-from ...shapes.shape_object import ShapeObject
 
 
 class Rings(ShapeObject):

@@ -21,10 +21,10 @@
 from math import log
 from panda3d.core import LVector3d
 
-from ..datasource import DataSource
+from ..entities.datasource import DataSource
+from ..entities.shape_object import ShapeObject
 from ..scattering.scattering import ScatteringBase
 from ..shaders.scattering import AtmosphericScattering
-from ..shapes.shape_object import ShapeObject
 
 
 class CelestiaScattering(ScatteringBase):

@@ -21,8 +21,8 @@
 from panda3d.core import CullFaceAttrib, DepthOffsetAttrib, LVector3
 from panda3d.core import LQuaternion
 
+from ...entities.shape_object import ShapeObject
 from ...parameters import AutoUserParameter
-from ...shapes.shape_object import ShapeObject
 from ...shapes.spheres import SphereShape
 from ... import settings
 

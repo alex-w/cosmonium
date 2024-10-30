@@ -28,8 +28,8 @@ from panda3d.core import ColorWriteAttrib, LColor, CullFaceAttrib, RenderState
 from panda3d.core import LMatrix4, PTA_LMatrix4, LQuaternion
 from panda3d._rplight import PSSMCameraRig
 
+from .entities.datasource import DataSource
 from .foundation import BaseObject
-from .datasource import DataSource
 from .shaders.shadows.pssm import ShaderPSSMShadowMap
 from .shaders.shadows.shadowmap import ShaderShadowMap
 from .shaders.shadows.rings import ShaderRingsShadow

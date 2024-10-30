@@ -21,18 +21,19 @@
 from math import pow, pi
 from panda3d.core import Texture, LVector3d, LPoint3, LMatrix4, LQuaternion
 
-from ...datasource import DataSource
-from ...textures import TextureConfiguration
-from ...shaders.after_effects.hdr import HDR
-from ...shaders.base import StructuredShader, ShaderProgram
-from ...shaders.lighting.scattering import ScatteringInterface as ShaderScatteringInterface
-from ...shaders.scattering import AtmosphericScattering
+from ...entities.datasource import DataSource
 from ...parameters import AutoUserParameter, UserParameter
 from ...pipeline.shaders import GeneratorVertexShader
 from ...pipeline.target import ProcessTarget
 from ...pipeline.stage import ProcessStage
 from ...pipeline.factory import PipelineFactory
+from ...shaders.after_effects.hdr import HDR
+from ...shaders.base import StructuredShader, ShaderProgram
+from ...shaders.lighting.scattering import ScatteringInterface as ShaderScatteringInterface
+from ...shaders.scattering import AtmosphericScattering
+from ...textures import TextureConfiguration
 from ... import settings
+
 from ..scattering import ScatteringBase
 
 

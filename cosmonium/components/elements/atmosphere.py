@@ -21,7 +21,7 @@
 from panda3d.core import CullFaceAttrib
 from panda3d.core import LQuaternion
 
-from ...shapes.shape_object import ShapeObject
+from ...entities.shape_object import ShapeObject
 from ...utils import TransparencyBlend
 
 from ... import settings

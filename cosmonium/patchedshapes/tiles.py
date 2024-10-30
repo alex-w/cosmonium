@@ -20,12 +20,13 @@
 from panda3d.core import LPoint3d, LVector3, LVector3d, LVector4, LMatrix4
 from panda3d.core import NodePath
 
-from .geometry import geometry
+from ..geometry import geometry
+from ..textures import TexCoord
+from .. import settings
+
 from .patchedshapes import CullingFrustum, QuadTreeNode
 from .patchedshapes import PatchBase, PatchedShapeBase, BoundingBoxShape, PatchLayer, PatchFactory
 from .patchneighbours import PatchNeighboursBase
-from .textures import TexCoord
-from . import settings
 
 
 class Tile(PatchBase):

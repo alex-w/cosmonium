@@ -26,9 +26,9 @@ from panda3d.core import PTAVecBase4f
 from panda3d.core import Texture, GeomEnums
 from random import random, uniform
 
-from ..shaders.instancing import OffsetScaleInstanceControl
-from ..datasource import DataSource
+from ..entities.datasource import DataSource
 from ..foundation import VisibleObject
+from ..shaders.instancing import OffsetScaleInstanceControl
 from .. import settings
 
 

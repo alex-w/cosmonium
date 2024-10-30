@@ -61,7 +61,8 @@ from cosmonium.parsers.cameraparser import CameraControllerYamlParser
 from cosmonium.parsers.collisionparser import CollisionShapeYamlParser
 from cosmonium.parsers.flatuniverseparser import FlatUniverseYamlParser
 from cosmonium.parsers.yamlparser import YamlModuleParser
-from cosmonium.patchedshapes import PatchLayer
+from cosmonium.patchedshapes.patchedshapes import PatchLayer
+from cosmonium.patchedshapes.tiles import TerrainLayerFactoryInterface
 from cosmonium.physics.bullet import BulletPhysics, BulletMover
 from cosmonium.physics.collision import CollisionPhysics
 from cosmonium.procedural.water import WaterNode
@@ -69,7 +70,6 @@ from cosmonium.scene.flatuniverse import FlatUniverse
 from cosmonium.scene.scenemanager import C_CameraHolder, StaticSceneManager, remove_main_region
 from cosmonium.scene.sceneworld import CartesianWorld, SceneWorld
 from cosmonium.shadows import CustomShadowMapShadowCaster, PSSMShadowMapShadowCaster
-from cosmonium.tiles import TerrainLayerFactoryInterface
 from cosmonium.ui.splash import NoSplash
 from cosmonium import settings, mesh
 
