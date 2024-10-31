@@ -31,6 +31,7 @@ from ..shadows import MultiShadows
 from .. import settings
 
 from .datasource import DataSourcesHandler
+from .tasks_tree import TasksTree
 
 
 class ShapeObject(VisibleObject):
@@ -272,7 +273,9 @@ class ShapeObject(VisibleObject):
             print(globalClock.get_frame_count(), "START", patch.str_id(), patch.instance_ready)
         if self.shape.task is not None:
             await shield(self.shape.task)
-        await self.patch_sources.load(patch)
+        tasks_tree = TasksTree(self.patch_sources.sources)
+        self.patch_sources.load(tasks_tree, patch)
+        await tasks_tree.run_tasks()
         if patch.instance is not None:
             self.patch_sources.apply(patch)
             patch.instance_ready = True
@@ -289,7 +292,9 @@ class ShapeObject(VisibleObject):
     async def shape_task(self, shape):
         if settings.debug_shape_task:
             print(globalClock.get_frame_count(), "START", shape.str_id(), shape.instance_ready)
-        await self.sources.load(shape)
+        tasks_tree = TasksTree(self.sources.sources)
+        self.sources.load(tasks_tree, shape)
+        await tasks_tree.run_tasks()
         if shape.instance is not None:
             self.sources.apply(shape)
             shape.instance_ready = True

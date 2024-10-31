@@ -18,31 +18,6 @@
 #
 
 
-from direct.task.Task import gather
-from direct.task.TaskManagerGlobal import taskMgr
-
-
-class DataSourceTasksTree:
-    def __init__(self, sources):
-        self.sources = sources
-        self.named_tasks = {source.name: None for source in sources}
-        self.tasks = []
-
-    def add_task_for(self, source, coro):
-        task = taskMgr.add(coro, sort=taskMgr.getCurrentTask().sort + 1)
-        self.named_tasks[source.name] = task
-        self.tasks.append(task)
-
-    def collect_tasks(self, shape, owner):
-        for source in self.sources:
-            source.create_load_task(self, shape, owner)
-
-    async def run_tasks(self):
-        await gather(*self.tasks)
-        self.named_tasks = {}
-        self.tasks = []
-
-
 class DataSource:
     def __init__(self, name):
         self.name = name
@@ -146,12 +121,10 @@ class DataSourcesHandler(DataSource):
         for source in self.sources:
             source.early_apply(shape, shape.instance)
 
-    async def load(self, shape):
+    def load(self, tasks_tree, shape):
         for source in self.sources:
             source.create(shape)
-        tasks_tree = DataSourceTasksTree(self.sources)
         tasks_tree.collect_tasks(shape, self)
-        await tasks_tree.run_tasks()
 
     def apply(self, shape):
         for source in self.sources:
