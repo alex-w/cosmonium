@@ -70,13 +70,14 @@ class BoundingBoxShape:
 
 
 class PatchLayer:
+
     def __init__(self):
         self.instance = None
 
     def check_settings(self):
         pass
 
-    def create_instance(self, patch):
+    def create_instance(self, patch, tasks_tree):
         pass
 
     def patch_done(self, patch, early):
@@ -205,9 +206,9 @@ class PatchBase(Shape):
         for layer in self.layers:
             layer.patch_done(self, early)
 
-    def create_geometry_instance(self):
+    def create_geometry_instance(self, tasks_tree):
         for layer in self.layers:
-            layer.create_instance(self)
+            layer.create_instance(self, tasks_tree)
 
     def remove_geometry_instance(self):
         for layer in self.layers:
@@ -216,7 +217,6 @@ class PatchBase(Shape):
     def create_instance(self):
         self.instance = NodePath('patch')
         self.instance.setPythonTag('patch', self)
-        self.create_geometry_instance()
         if settings.debug_lod_show_bb:
             self.bounds_shape.create_instance()
             self.bounds_shape.instance.reparent_to(self.owner.instance)
@@ -353,7 +353,8 @@ class SpherePatch(PatchBase):
 
 
 class SpherePatchLayer(PatchLayer):
-    def create_instance(self, patch):
+
+    def create_instance(self, patch, tasks_tree):
         self.instance = geometry.UVPatch(
             patch.owner.axes / patch.owner.radius,
             patch.density,
@@ -369,7 +370,7 @@ class SpherePatchLayer(PatchLayer):
     def update_instance(self, patch):
         if self.instance is not None and patch.shown:
             self.remove_instance()
-            self.create_instance(patch)
+            self.create_instance(patch, None)
 
 
 class SquarePatchBase(PatchBase):
@@ -504,7 +505,8 @@ class NormalizedSquarePatch(SquarePatchBase):
 
 
 class NormalizedSquarePatchLayer(PatchLayer):
-    def create_instance(self, patch):
+
+    def create_instance(self, patch, tasks_tree):
         orientation = patch.rotations[patch.face]
         rotated_axes = orientation.conjugate().xform(patch.owner.axes)
         rotated_axes = LVector3d(abs(rotated_axes[0]), abs(rotated_axes[1]), abs(rotated_axes[2]))
@@ -526,7 +528,7 @@ class NormalizedSquarePatchLayer(PatchLayer):
     def update_instance(self, patch):
         if self.instance is not None and patch.shown:
             self.remove_instance()
-            self.create_instance(patch)
+            self.create_instance(patch, None)
 
 
 class SquaredDistanceSquarePatch(SquarePatchBase):
@@ -545,7 +547,8 @@ class SquaredDistanceSquarePatch(SquarePatchBase):
 
 
 class SquaredDistanceSquarePatchLayer(PatchLayer):
-    def create_instance(self, patch):
+
+    def create_instance(self, patch, tasks_tree):
         orientation = patch.rotations[patch.face]
         rotated_axes = orientation.conjugate().xform(patch.owner.axes)
         rotated_axes = LVector3d(abs(rotated_axes[0]), abs(rotated_axes[1]), abs(rotated_axes[2]))
@@ -569,7 +572,7 @@ class SquaredDistanceSquarePatchLayer(PatchLayer):
     def update_instance(self, patch):
         if self.instance is not None and patch.shown:
             self.remove_instance()
-            self.create_instance(patch)
+            self.create_instance(patch, None)
 
 
 class PatchedShapeBase(Shape):

@@ -80,6 +80,7 @@ units.Km = 1000.0
 
 
 class WaterLayer(PatchLayer):
+
     def __init__(self, config):
         self.config = config
         self.water = None
@@ -91,7 +92,7 @@ class WaterLayer(PatchLayer):
             else:
                 self.water.remove_instance()
 
-    def create_instance(self, patch):
+    def create_instance(self, patch, tasks_tree):
         scale = patch.scale * patch.size / self.config.scale
         self.water = WaterNode(patch.x0, patch.y0, patch.size, scale, patch)
         if self.config.visible:
@@ -118,6 +119,7 @@ class WaterLayerFactory(TerrainLayerFactoryInterface):
 
 
 class PhysicsLayer(PatchLayer):
+
     def __init__(self, physics):
         self.physics = physics
         self.instance = None

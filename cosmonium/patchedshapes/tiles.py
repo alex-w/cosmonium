@@ -71,9 +71,10 @@ class Tile(PatchBase):
 
 
 class GpuPatchTerrainLayer(PatchLayer):
+
     template = None
 
-    def create_instance(self, patch):
+    def create_instance(self, patch, tasks_tree):
         if self.template is None:
             GpuPatchTerrainLayer.template = geometry.Patch(1.0)
         self.instance = NodePath('tile')
@@ -84,9 +85,10 @@ class GpuPatchTerrainLayer(PatchLayer):
 
 
 class MeshTerrainLayer(PatchLayer):
+
     template = {}
 
-    def create_instance(self, patch):
+    def create_instance(self, patch, tasks_tree):
         tile_id = (
             str(patch.size)
             + '-'
@@ -113,7 +115,7 @@ class MeshTerrainLayer(PatchLayer):
 
     def update_instance(self, patch):
         self.remove_instance()
-        self.create_instance(patch)
+        self.create_instance(patch, None)
 
 
 class TerrainLayerFactoryInterface:
