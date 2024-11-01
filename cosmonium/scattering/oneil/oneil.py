@@ -697,7 +697,8 @@ class ONeilScatteringDataSourceBase(DataSource):
             offset = LVector3d()
         else:
             descale_mat = LMatrix4.ident_mat()
-            eye_descale_mat = LMatrix4.ident_mat()
+            eye_descale_mat = LMatrix4()
+            LQuaternion(*camera_rot).extract_to_matrix(eye_descale_mat)
             height_scale = 1.0
             offset = LVector3d(0, 0, inner_radius)
         pos = body.anchor.rel_position - offset
