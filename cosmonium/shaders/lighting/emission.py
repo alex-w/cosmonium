@@ -49,7 +49,9 @@ class PureEmissionLightingModel(CompositeShaderComponent):
         CompositeShaderComponent.vertex_shader(self, code)
         global_lights = self.shader.data_source.get_source_for('global_lights')
         code.append("for (int i = 0; i < 1; ++i) {")
-        self.scattering.prepare_scattering_for(code, global_lights + "eye_direction", global_lights + "color")
+        self.scattering.prepare_scattering_for(
+            code, global_lights + "direction", global_lights + "eye_direction", global_lights + "color"
+        )
         code.append("}")
 
     def fragment_shader(self, code):

@@ -484,23 +484,23 @@ class ONeilScatteringShaderBase(AtmosphericScattering, ShaderScatteringInterface
             self.calc_scattering(code)
         self.oneil_incoming_light_for(code)
 
-    def prepare_scattering_for(self, code, light_direction, light_color):
+    def prepare_scattering_for(self, code, light_direction, eye_light_direction, light_color):
         if not self.calc_in_fragment:
             if self.atmosphere:
                 code.append(
-                    f"oneil_calc_scattering(world_vertex, world_normal, {light_direction}, v3Direction, rayleigh_inscattering, mie_inscattering, transmittance);"
+                    f"oneil_calc_scattering(world_vertex, world_normal, {eye_light_direction}, v3Direction, rayleigh_inscattering, mie_inscattering, transmittance);"
                 )
             else:
                 code.append(
-                    f"oneil_calc_scattering(world_vertex, world_normal, {light_direction}, rayleigh_inscattering, mie_inscattering, transmittance);"
+                    f"oneil_calc_scattering(world_vertex, world_normal, {eye_light_direction}, rayleigh_inscattering, mie_inscattering, transmittance);"
                 )
 
     def calc_transmittance(self, code):
         pass
 
-    def incoming_light_for(self, code, light_direction, light_color):
+    def incoming_light_for(self, code, light_direction, eye_light_direction, light_color):
         code.append(
-            f"oneil_incoming_light_for(world_vertex, world_normal, {light_direction}, {light_color}.rgb, incoming_light_color, in_scatter, transmittance);"
+            f"oneil_incoming_light_for(world_vertex, world_normal, {eye_light_direction}, {light_color}.rgb, incoming_light_color, in_scatter, transmittance);"
         )
 
 

@@ -240,17 +240,17 @@ void celestia_incoming_light_for(in vec3 scatteredColor, in vec3 scatterEx, in v
             self.celestia_calc_scattering(code)
         self.celestia_incoming_light_for(code)
 
-    def prepare_scattering_for(self, code, light_direction, light_color):
+    def prepare_scattering_for(self, code, light_direction, eye_light_direction, light_color):
         if not self.calc_in_fragment:
             code.append("celestia_calc_scattering(world_vertex, scatteredColor, scatterEx, eyeDir_obj);")
 
     def calc_transmittance(self, code):
         pass
 
-    def incoming_light_for(self, code, light_direction, light_color):
+    def incoming_light_for(self, code, light_direction, eye_light_direction, light_color):
         code.append(
             "celestia_incoming_light_for("
-            f"scatteredColor, scatterEx, eyeDir_obj, {light_direction}, {light_color}.rgb, "
+            f"scatteredColor, scatterEx, eyeDir_obj, {eye_light_direction}, {light_color}.rgb, "
             "incoming_light_color, in_scatter, transmittance);"
         )
 

@@ -23,23 +23,23 @@ from ..component import ShaderComponent
 
 class ScatteringInterface:
 
-    def prepare_scattering_for(self, code, light_direction, light_color):
+    def prepare_scattering_for(self, code, light_direction, eye_light_direction, light_color):
         raise NotImplementedError()
 
     def calc_transmittance(self, code):
         raise NotImplementedError()
 
-    def incoming_light_for(self, code, light_direction, light_color, ambient_diffuse):
+    def incoming_light_for(self, code, light_direction, eye_light_direction, light_color, ambient_diffuse):
         raise NotImplementedError()
 
 
 class NoScattering(ShaderComponent, ScatteringInterface):
 
-    def prepare_scattering_for(self, code, light_direction, light_color):
+    def prepare_scattering_for(self, code, light_direction, eye_light_direction, light_color):
         pass
 
     def calc_transmittance(self, code):
         pass
 
-    def incoming_light_for(self, code, light_direction, light_color):
+    def incoming_light_for(self, code, light_direction, eye_light_direction, light_color):
         code.append(f"    incoming_light_color = {light_color}.rgb;")

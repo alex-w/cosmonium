@@ -49,13 +49,13 @@ class AtmosphereFogScatteringShader(AtmosphericScattering, ShaderScatteringInter
             code.append("uniform vec3 sun_color;")
             code.append("float fogFallOff = 0.00035;")
 
-    def prepare_scattering_for(self, code, light_direction, light_color):
+    def prepare_scattering_for(self, code, light_direction, eye_light_direction, light_color):
         pass
 
     def calc_transmittance(self, code):
         pass
 
-    def incoming_light_for(self, code, light_direction, light_color):
+    def incoming_light_for(self, code, light_direction, eye_light_direction, light_color):
         if self.atmosphere:
             code.append("    in_scatter = sky_color;")
         else:
