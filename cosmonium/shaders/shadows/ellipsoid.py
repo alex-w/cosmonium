@@ -63,49 +63,42 @@ class ShaderSphereShadow(ShaderComponent, ShaderShadowInterface):
             code.append("  vec3 scaled_world_vertex = world_vertex;")
             code.append("  vec3 scaled_star_center = star_center;")
         code.append("  vec3 star_local = scaled_star_center - scaled_world_vertex;")
-        code.append("  float aa = dot(star_local, star_local);")
+        if not self.far_sun:
+            # Small angle approximation
+            code.append("  float star_ar = star_radius / length(star_local);")
         code.append("  vec3 occluder_local = occluder_centers[i] - scaled_world_vertex;")
         code.append("  float occluder_radius = occluder_radii[i];")
-        code.append("  float bb = dot(occluder_local, occluder_local);")
+        # Small angle approximation
+        code.append("  float occluder_ar = occluder_radius / length(occluder_local);")
         code.append("  float ab = dot(star_local, occluder_local);")
-        code.append("  if (ab > 0) { //Apply shadow only if the occluder is between the target and the star")
-        code.append("    float s = ab*ab + star_radius*star_radius*bb + occluder_radius*occluder_radius*aa - aa*bb;")
-        code.append("    float t = 2.0*ab*star_radius*occluder_radius;")
-        code.append("    if ((s + t) < 0.0) {")
-        code.append("      //No overlap")
-        code.append("    } else if ((s - t) < 0.0) {")
-        code.append("      //Partial overlap, use angular radius to calculate actual occlusion")
-        if not self.far_sun:
-            code.append("      float star_ar = asin(star_radius / length(star_local));")
-        code.append("      float occluder_ar = asin(occluder_radius / length(occluder_local));")
+        code.append("  if (ab > 0) {")
+        code.append("    //Apply shadow only if the occluder is between the target and the star")
         # acos(dot) has precision issues and shows artefacts in the penumbra
-        # We use asin(cross()) instead to diminish the artifacts (though smoothstep below is also needed)
-        # code.append("      float separation = "
-        # "acos(clamp(dot(normalize(star_local), normalize(occluder_local)), 0, 1));")
+        # We use asin(cross()) instead to diminish the artifacts
         code.append(
             "      float separation = "
             "asin(clamp(length(cross(normalize(star_local), normalize(occluder_local))), 0, 1));"
         )
-        code.append("      if (separation <= star_ar - occluder_ar) {")
-        code.append("        //Occluder fully inside star, attenuation is the ratio of the visible surfaces")
+        code.append("    if (separation > star_ar + occluder_ar) {")
+        code.append("      // No overlap")
+        code.append("    } else if (separation <= abs(occluder_ar - star_ar)) {")
+        code.append("      if (occluder_ar > star_ar) {")
+        code.append("        // Full overlap")
+        code.append("        global_shadow = 0.0;")
+        code.append("      } else {")
+        code.append("        // Occluder fully inside star, attenuation is the ratio of the visible surfaces")
         code.append("        float surface_ratio = clamp((occluder_ar * occluder_ar) / (star_ar * star_ar), 0, 1);")
         code.append("        global_shadow *= 1.0 - surface_ratio;")
-        code.append("      } else {")
-        code.append("        //Occluder partially occluding star, use linear approximation")
-        code.append("        float surface_ratio = clamp((occluder_ar * occluder_ar) / (star_ar * star_ar), 0, 1);")
-        code.append("        float ar_diff = abs(star_ar - occluder_ar);")
-        # TODO: Smoothstep is added here to hide precision artifacts in the penumbra
-        # It causes the penumbra to appear darker than it should
-        # code.append("        shadow *= surface_ratio * (separation - ar_diff) / (star_ar + occluder_ar - ar_diff);")
-        code.append
-        (
-            "        global_shadow *= "
-            "surface_ratio * smoothstep(0, 1, (separation - ar_diff) / (star_ar + occluder_ar - ar_diff));"
-        )
         code.append("      }")
         code.append("    } else {")
-        code.append("      global_shadow = 0.0; //Full overlap")
-        code.append("    }")
+        code.append("      // Occluder partially occluding star, use linear approximation")
+        code.append("      float surface_ratio = clamp((occluder_ar * occluder_ar) / (star_ar * star_ar), 0, 1);")
+        code.append("      float ar_diff = abs(star_ar - occluder_ar);")
+        code.append(
+            "      global_shadow *= "
+            "1.0 - surface_ratio * (1.0 - clamp((separation - ar_diff) / (star_ar + occluder_ar - ar_diff), 0, 1));"
+        )
+        code.append("      }")
         code.append("  } else {")
         code.append("    //Not in shadow")
         code.append("  }")

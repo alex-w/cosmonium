@@ -755,7 +755,7 @@ class SphereShadows(ShadowBase):
         self.target = target
         self.shadow_casters = []
         self.max_occluders = 4
-        self.far_sun = True
+        self.far_sun = False
         self.oblate_occluder = True
         self.shader_component = ShaderSphereShadow(self.max_occluders, self.far_sun, self.oblate_occluder)
         self.data_source = SphereShadowDataSource(self, self.max_occluders, self.far_sun, self.oblate_occluder)
