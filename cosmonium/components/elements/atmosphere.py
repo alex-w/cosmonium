@@ -71,7 +71,7 @@ class Atmosphere(ShapeObject):
 
     async def create_instance_task(self, scene_anchor):
         # TODO: Find a better way to retrieve ellipticity
-        scale = self.body.surface.get_scale() / self.body_radius
+        scale = self.body.surface.get_shape_axes() / self.body_radius
         self.set_scale(scale * self.radius)
         await ShapeObject.create_instance_task(self, scene_anchor)
         TransparencyBlend.apply(self.blend, self.instance)
