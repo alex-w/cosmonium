@@ -40,6 +40,9 @@ class Atmosphere(ShapeObject):
     def add_shape_object(self, shape_object):
         self.scattering.add_shape_object(shape_object)
 
+    def remove_shape_object(self, shape_object):
+        self.scattering.remove_shape_object(shape_object)
+
     def get_component_name(self):
         return _('Atmosphere')
 
