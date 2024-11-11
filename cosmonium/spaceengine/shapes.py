@@ -17,8 +17,11 @@
 # along with Cosmonium.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-from ..patchedshapes.patchedshapes import SquarePatchBase, NormalizedSquareShape
+
+from panda3d.core import LQuaternion, LVector3d
+from ..patchedshapes.patchedshapes import PatchFactory, PatchLayer, SquarePatchBase, NormalizedSquareShape
 from ..geometry import geometry
+from .. import settings
 
 
 class SpaceEngineTextureSquarePatch(SquarePatchBase):
@@ -31,60 +34,88 @@ class SpaceEngineTextureSquarePatch(SquarePatchBase):
         {'x_inverted': True, 'y_inverted': True, 'xy_swap': False},  # Bottom # Antartic
     ]
 
-    def face_normal(self, x, y):
-        (x, y) = self.calc_xy(x, y)
-        return geometry.NormalizedSquarePatchNormal(
-            float(x) / self.div, float(y) / self.div, float(x + 1) / self.div, float(y + 1) / self.div
-        )
+    def face_offset_vector(self, axes):
+        (x0, y0, x1, y1) = self.calc_xy()
+        return geometry.NormalizedSquarePatchOffsetVector(axes, x0, y0, x1, y1)
 
-    def create_bounding_volume(self, x, y, min_radius, max_radius):
-        (x, y) = self.calc_xy(x, y)
-        return geometry.NormalizedSquarePatchAABB(
-            min_radius,
-            max_radius,
-            float(x) / self.div,
-            float(y) / self.div,
-            float(x + 1) / self.div,
-            float(y + 1) / self.div,
-            offset=self.offset,
-        )
+    def create_bounding_volume(self, axes, min_height, max_height):
+        (x0, y0, x1, y1) = self.calc_xy()
+        return geometry.NormalizedSquarePatchAABB(axes, min_height, max_height, x0, y0, x1, y1, offset=self.offset)
 
-    def create_centre(self, x, y, radius):
-        (x, y) = self.calc_xy(x, y)
-        return geometry.NormalizedSquarePatchPoint(
-            radius,
-            0.5,
-            0.5,
-            float(x) / self.div,
-            float(y) / self.div,
-            float(x + 1) / self.div,
-            float(y + 1) / self.div,
-        )
+    def create_centre(self, axes):
+        (x0, y0, x1, y1) = self.calc_xy()
+        return geometry.NormalizedSquarePatchPoint(axes, 0.5, 0.5, x0, y0, x1, y1)
 
-    def create_patch_instance(self, x, y):
-        (x, y) = self.calc_xy(x, y)
-        return geometry.NormalizedSquarePatch(
-            1.0,
-            self.density,
-            self.tessellation_outer_level,
-            float(x) / self.div,
-            float(y) / self.div,
-            float(x + 1) / self.div,
-            float(y + 1) / self.div,
-            offset=self.offset,
-            inv_u=self.xy_params[self.face]['x_inverted'],
-            inv_v=self.xy_params[self.face]['y_inverted'],
-            swap_uv=self.xy_params[self.face]['xy_swap'],
-        )
-
-    def calc_xy(self, x, y):
+    def calc_xy(self):
+        div = 1 << self.lod
+        x = self.x
+        y = self.y
         if self.xy_params[self.face]['xy_swap']:
             x, y = y, x
         if self.xy_params[self.face]['x_inverted']:
-            x = self.div - x - 1
+            x = div - x - 1
         if self.xy_params[self.face]['y_inverted']:
-            y = self.div - y - 1
-        return x, y
+            y = div - y - 1
+        x0 = float(x) / div
+        y0 = float(y) / div
+        x1 = float(x + 1) / div
+        y1 = float(y + 1) / div
+        return (x0, y0, x1, y1)
+
+
+class SpaceEngineTextureSquareLayer(PatchLayer):
+
+    def create_instance(self, patch, tasks_tree):
+        (x0, y0, x1, y1) = patch.calc_xy()
+        orientation = patch.rotations[patch.face]
+        rotated_axes = orientation.conjugate().xform(patch.owner.axes)
+        rotated_axes = LVector3d(abs(rotated_axes[0]), abs(rotated_axes[1]), abs(rotated_axes[2]))
+        self.instance = geometry.NormalizedSquarePatch(
+            rotated_axes / patch.owner.radius,
+            geometry.TessellationInfo(patch.density, patch.tessellation_outer_level),
+            x0,
+            y0,
+            x1,
+            y1,
+            has_offset=patch.offset is not None,
+            offset=patch.offset if patch.offset is not None else 0.0,
+            inv_u=patch.xy_params[patch.face]['x_inverted'],
+            inv_v=patch.xy_params[patch.face]['y_inverted'],
+            swap_uv=patch.xy_params[patch.face]['xy_swap'],
+            use_patch_adaptation=settings.use_patch_adaptation,
+            use_patch_skirts=settings.use_patch_skirts,
+        )
+        self.instance.reparent_to(patch.instance)
+        self.instance.set_quat(LQuaternion(*orientation))
+
+    def update_instance(self, patch):
+        if self.instance is not None and patch.shown:
+            self.remove_instance()
+            self.create_instance(patch, None)
+
+
+class SpaceEngineTextureSquarePatchFactory(PatchFactory):
+
+    def create_patch(self, parent, lod, face, x, y):
+        density = self.lod_control.get_density_for(lod)
+        (min_height, max_height, mean_height) = self.get_patch_limits(parent)
+        patch = SpaceEngineTextureSquarePatch(
+            face,
+            x,
+            y,
+            parent,
+            lod,
+            density,
+            self.surface.height_scale,
+            min_height,
+            max_height,
+            mean_height,
+            self.owner.axes,
+        )
+        patch.add_layer(SpaceEngineTextureSquareLayer())
+        # TODO: Temporary or make right
+        patch.owner = self.owner
+        return patch
 
 
 class SpaceEnginePatchedSquareShape(NormalizedSquareShape):
@@ -92,13 +123,3 @@ class SpaceEnginePatchedSquareShape(NormalizedSquareShape):
     def __init__(self, *args, **kwargs):
         NormalizedSquareShape.__init__(self, *args, **kwargs)
         self.face_unique = True
-
-    def create_patch(self, parent, lod, face, x, y):
-        density = self.lod_control.get_density_for(lod)
-        (min_radius, max_radius, mean_radius) = self.get_patch_limits(parent)
-        patch = SpaceEngineTextureSquarePatch(
-            face, x, y, parent, lod, density, self.parent, min_radius, max_radius, mean_radius
-        )
-        # TODO: Temporary or make right
-        patch.owner = self
-        return patch

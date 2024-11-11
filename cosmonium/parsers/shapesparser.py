@@ -27,7 +27,7 @@ from ..patchedshapes.tiles import TiledShape
 from ..procedural.raymarching import RayMarchingShape
 from ..shapes.mesh import MeshShape
 from ..shapes.spheres import SphereShape, IcoSphereShape
-from ..spaceengine.shapes import SpaceEnginePatchedSquareShape
+from ..spaceengine.shapes import SpaceEnginePatchedSquareShape, SpaceEngineTextureSquarePatchFactory
 
 from .yamlparser import YamlModuleParser
 
@@ -113,7 +113,8 @@ class ShapeYamlParser(YamlModuleParser):
             factory = SquaredDistanceSquarePatchFactory()
             shape = SquaredDistanceSquareShape(factory)
         elif shape_type == 'se-sphere':
-            shape = SpaceEnginePatchedSquareShape()
+            factory = SpaceEngineTextureSquarePatchFactory()
+            shape = SpaceEnginePatchedSquareShape(factory)
         elif shape_type == 'mesh':
             shape, extra = MeshYamlParser.decode(shape_data, radius)
         elif shape_type == 'raymarching':
