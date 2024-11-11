@@ -46,7 +46,7 @@ class ProceduralStarSurfaceFactory(SurfaceFactory):
         factory = SquaredDistanceSquarePatchFactory()
         lod_control = VertexSizeLodControl(
             max_vertex_size=settings.patch_max_vertex_size,
-            density=settings.patch_constant_density,
+            density=settings.patch_default_density,
         )
         shape = SquaredDistanceSquareShape(factory, lod_control=lod_control)
         shader = RenderingShader(lighting_model=PureEmissionLightingModel())

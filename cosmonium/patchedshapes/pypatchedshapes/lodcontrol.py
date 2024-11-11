@@ -52,13 +52,12 @@ class LodControl(object):
 
 
 class TextureLodControl(LodControl):
-    def __init__(self, min_density, density, max_lod=100):
+    def __init__(self, density, max_lod=100):
         LodControl.__init__(self, density, max_lod)
-        self.min_density = min_density
         self.texture_size = 0
 
     def get_density_for(self, lod):
-        return max(self.min_density, self.density // (1 << lod))
+        return self.density
 
     def set_appearance(self, appearance):
         self.appearance = appearance
@@ -83,9 +82,15 @@ class TextureLodControl(LodControl):
 
 
 class TextureOrVertexSizeLodControl(TextureLodControl):
-    def __init__(self, max_vertex_size, min_density, density, max_lod=100):
-        TextureLodControl.__init__(self, min_density, density, max_lod)
+    def __init__(self, max_vertex_size, density, max_lod=100):
+        TextureLodControl.__init__(self, density, max_lod)
         self.max_vertex_size = max_vertex_size
+
+    def get_density_for(self, lod):
+        if self.texture_size > 0:
+            return int(self.texture_size / self.max_vertex_size)
+        else:
+            return self.density
 
     def should_split(self, patch, apparent_patch_size, distance):
         if patch.lod >= self.max_lod:

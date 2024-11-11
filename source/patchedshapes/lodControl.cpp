@@ -1,7 +1,7 @@
 /*
  * This file is part of Cosmonium.
  *
- * Copyright (C) 2018-2021 Laurent Deru.
+ * Copyright (C) 2018-2024 Laurent Deru.
  *
  * Cosmonium is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,8 +42,7 @@ LodControl::should_remove(QuadTreeNode *patch, double apparent_patch_size, doubl
   return !patch->visible;
 }
 
-TextureLodControl::TextureLodControl(unsigned int min_density, unsigned int density, unsigned int max_lod) :
-    min_density(min_density),
+TextureLodControl::TextureLodControl(unsigned int density, unsigned int max_lod) :
     density(density),
     max_lod(max_lod),
     texture_size(0)
@@ -59,7 +58,7 @@ TextureLodControl::set_texture_size(unsigned int texture_size)
 unsigned int
 TextureLodControl::get_density_for(unsigned int lod)
 {
-  return max(min_density, density / (1 << lod));
+  return density;
 }
 
 bool
@@ -79,10 +78,20 @@ TextureLodControl::should_merge(QuadTreeNode *patch, double apparent_patch_size,
   return (apparent_patch_size < texture_size / 1.1);
 }
 
-TextureOrVertexSizeLodControl::TextureOrVertexSizeLodControl(unsigned int max_vertex_size, unsigned int min_density, unsigned int density, unsigned int max_lod) :
-    TextureLodControl(min_density, density, max_lod),
+TextureOrVertexSizeLodControl::TextureOrVertexSizeLodControl(unsigned int max_vertex_size, unsigned int density, unsigned int max_lod) :
+    TextureLodControl(density, max_lod),
     max_vertex_size(max_vertex_size)
 {
+}
+
+unsigned int
+TextureOrVertexSizeLodControl::get_density_for(unsigned int lod)
+{
+    if (texture_size > 0) {
+        return int(texture_size / max_vertex_size);
+    } else {
+        return density;
+    }
 }
 
 bool

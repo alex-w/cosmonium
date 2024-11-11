@@ -1,7 +1,7 @@
 /*
  * This file is part of Cosmonium.
  *
- * Copyright (C) 2018-2021 Laurent Deru.
+ * Copyright (C) 2018-2024 Laurent Deru.
  *
  * Cosmonium is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ PUBLISHED:
 class TextureLodControl : public LodControl
 {
 PUBLISHED:
-    TextureLodControl(unsigned int min_density, unsigned int density, unsigned int max_lod=100);
+    TextureLodControl(unsigned int density, unsigned int max_lod=100);
 
     void set_texture_size(unsigned int texture_size);
 
@@ -57,7 +57,6 @@ PUBLISHED:
     virtual bool should_merge(QuadTreeNode *patch, double apparent_patch_size, double distance);
 
 protected:
-    unsigned int min_density;
     unsigned int density;
     unsigned int max_lod;
     unsigned int texture_size;
@@ -84,7 +83,9 @@ protected:
 class TextureOrVertexSizeLodControl : public TextureLodControl
 {
 PUBLISHED:
-    TextureOrVertexSizeLodControl(unsigned int max_vertex_size, unsigned int min_density, unsigned int density, unsigned int max_lod=100);
+    TextureOrVertexSizeLodControl(unsigned int max_vertex_size, unsigned int density, unsigned int max_lod=100);
+
+    virtual unsigned int get_density_for(unsigned int lod);
 
     virtual bool should_split(QuadTreeNode *patch, double apparent_patch_size, double distance);
 

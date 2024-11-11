@@ -78,9 +78,7 @@ corrected_global_ambient = global_ambient
 max_sprite_size = 800
 
 patch_max_vertex_size = 64
-patch_min_density = 32
-patch_max_density = 64
-patch_constant_density = 32
+patch_default_density = 32
 use_horizon_culling = True
 cull_far_patches = False
 cull_far_patches_threshold = 10

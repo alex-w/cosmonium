@@ -99,14 +99,13 @@ class SurfaceYamlParser(YamlModuleParser):
             if shape.patchable:
                 if appearance.texture is None or appearance.texture.source.procedural:
                     shape.set_lod_control(
-                        VertexSizeLodControl(settings.patch_max_vertex_size, density=settings.patch_constant_density)
+                        VertexSizeLodControl(settings.patch_max_vertex_size, density=settings.patch_default_density)
                     )
                 else:
                     shape.set_lod_control(
                         TextureOrVertexSizeLodControl(
                             settings.patch_max_vertex_size,
-                            min_density=settings.patch_min_density,
-                            density=settings.patch_max_density,
+                            density=settings.patch_default_density,
                         )
                     )
             if heightmap is None:
