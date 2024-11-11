@@ -444,10 +444,10 @@ class SquarePatchBase(PatchBase):
             bounds,
         )
 
-    def face_offset_vector(self, x, y):
+    def face_offset_vector(self, axes):
         return None
 
-    def create_bounding_volume(self, x, y, min_height, max_height):
+    def create_bounding_volume(self, axes, min_height, max_height):
         return None
 
     def create_centre(self, axes):
