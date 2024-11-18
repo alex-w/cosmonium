@@ -214,43 +214,7 @@ vec4 cubic_deriv(float alpha) {
     return vec4(w0, w1, w2, w3);
 }
 
-float texture_bspline_filter_derivatives_x(sampler2D sam, vec2 pos)
-{
-    vec2 texSize = textureSize(sam, 0);
-    pos *= texSize;
-    vec2 tc = floor(pos - 0.5) + 0.5;
-
-    vec2 alpha = pos - tc;
-    vec4 cubicx = cubic_deriv(alpha.x);
-    vec4 cubicy = cubic(alpha.y);
-
-    vec4 c = tc.xxyy + vec2 (-1., +1.).xyxy;
-
-    vec4 s = vec4(cubicx.xz + cubicx.yw, cubicy.xz + cubicy.yw);
-    vec4 offset = c + vec4 (cubicx.yw, cubicy.yw) / s;
-
-    offset /= texSize.xxyy;
-
-    float sx = s.y;
-    float sy = s.z / (s.z + s.w);
-
-    float p00 = %s.x;
-    float p01 = %s.x;
-    float p10 = %s.x;
-    float p11 = %s.x;
-
-    float a = (p01 - p00) * sx;
-    float b = (p11 - p10) * sx;
-    return mix(b, a, sy);
-}'''
-            % (
-                self.interpolator.apply('sam', 'offset.xz'),
-                self.interpolator.apply('sam', 'offset.yz'),
-                self.interpolator.apply('sam', 'offset.xw'),
-                self.interpolator.apply('sam', 'offset.yw'),
-            ),
-            '''
-float texture_bspline_filter_derivatives_y(sampler2D sam, vec2 pos)
+vec2 texture_bspline_filter_derivatives(sampler2D sam, vec2 pos)
 {
     vec2 texSize = textureSize(sam, 0);
     pos *= texSize;
@@ -258,38 +222,54 @@ float texture_bspline_filter_derivatives_y(sampler2D sam, vec2 pos)
 
     vec2 alpha = pos - tc;
     vec4 cubicx = cubic(alpha.x);
-    vec4 cubicy = cubic_deriv(alpha.y);
+    vec4 cubicx_d = cubic_deriv(alpha.x);
+    vec4 cubicy = cubic(alpha.y);
+    vec4 cubicy_d = cubic_deriv(alpha.y);
 
     vec4 c = tc.xxyy + vec2 (-1., +1.).xyxy;
 
     vec4 s = vec4(cubicx.xz + cubicx.yw, cubicy.xz + cubicy.yw);
+    vec4 s_d = vec4(cubicx_d.xz + cubicx_d.yw, cubicy_d.xz + cubicy_d.yw);
     vec4 offset = c + vec4 (cubicx.yw, cubicy.yw) / s;
+    vec4 offset_d = c + vec4 (cubicx_d.yw, cubicy_d.yw) / s_d;
 
     offset /= texSize.xxyy;
+    offset_d /= texSize.xxyy;
 
     float sx = s.x / (s.x + s.y);
-    float sy = s.w;
+    float sx_dx = s_d.y;
+    float sy = s.z / (s.z + s.w);
+    float sy_dy = s_d.w;
 
-    float p00 = %s.x;
-    float p01 = %s.x;
-    float p10 = %s.x;
-    float p11 = %s.x;
+    float p00_dx = %s.x;
+    float p01_dx = %s.x;
+    float p10_dx = %s.x;
+    float p11_dx = %s.x;
 
-    float a = mix(p01, p00, sx);
-    float b = mix(p11, p10, sx);
-    return (b - a) * sy;
+    float p00_dy = %s.x;
+    float p01_dy = %s.x;
+    float p10_dy = %s.x;
+    float p11_dy = %s.x;
+
+    float a_dx = (p01_dx - p00_dx) * sx_dx;
+    float b_dx = (p11_dx - p10_dx) * sx_dx;
+    float dx = mix(b_dx, a_dx, sy);
+
+    float a = mix(p01_dy, p00_dy, sx);
+    float b = mix(p11_dy, p10_dy, sx);
+    float dy = (b - a) * sy_dy;
+    return vec2(dx, dy);
 }'''
             % (
-                self.interpolator.apply('sam', 'offset.xz'),
-                self.interpolator.apply('sam', 'offset.yz'),
-                self.interpolator.apply('sam', 'offset.xw'),
-                self.interpolator.apply('sam', 'offset.yw'),
+                self.interpolator.apply('sam', 'vec2(offset_d.x, offset.z)'),
+                self.interpolator.apply('sam', 'vec2(offset_d.y, offset.z)'),
+                self.interpolator.apply('sam', 'vec2(offset_d.x, offset.w)'),
+                self.interpolator.apply('sam', 'vec2(offset_d.y, offset.w)'),
+                self.interpolator.apply('sam', 'vec2(offset.x, offset_d.z)'),
+                self.interpolator.apply('sam', 'vec2(offset.y, offset_d.z)'),
+                self.interpolator.apply('sam', 'vec2(offset.x, offset_d.w)'),
+                self.interpolator.apply('sam', 'vec2(offset.y, offset_d.w)'),
             ),
-            '''
-vec2 texture_bspline_filter_derivatives(sampler2D sam, vec2 pos)
-{
-    return vec2(texture_bspline_filter_derivatives_x(sam, pos), texture_bspline_filter_derivatives_y(sam, pos));
-}''',
         ]
 
     def extra(self, shader, code):
