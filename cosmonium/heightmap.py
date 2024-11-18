@@ -90,10 +90,16 @@ class HeightmapPatch(PatchData):
         self.texture_peeker = None
 
     def collect_shader_data(self, data):
+        if self.parent.filter.derivatives_texture_based:
+            factor = 1 << self.data_lod
+        else:
+            factor = 1 << self.patch.lod
+        u_scale = 1 / (self.width * factor)
+        v_scale = 1 / (self.height * factor)
         # Data is set as RGBA, but stored as BGRA
         data += [
-            self.parent.get_v_scale(self.patch),
-            self.parent.get_u_scale(self.patch),
+            v_scale,
+            u_scale,
             self.parent.get_height_scale(self.patch),
             0.0,
             self.texture_scale[0],
@@ -310,20 +316,6 @@ class PatchedHeightmapBase(HeightmapBase, PatchedData):
         )
         PatchedData.__init__(self, name, size, overlap, max_lod)
         self.normal_scale_lod = True
-
-    def get_u_scale(self, patch):
-        if self.normal_scale_lod:
-            factor = 1 << patch.lod
-            return self.u_scale / factor
-        else:
-            return self.u_scale
-
-    def get_v_scale(self, patch):
-        if self.normal_scale_lod:
-            factor = 1 << patch.lod
-            return self.v_scale / factor
-        else:
-            return self.v_scale
 
     def get_data_source(self, data_store):
         return HeightmapShaderDataSource(self, data_store)

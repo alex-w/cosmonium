@@ -78,8 +78,27 @@ float get_terrain_height_%s(sampler2D heightmap, vec2 texcoord, HeightmapParamet
         ]
 
     def get_terrain_normal(self, code):
-        code += [
-            '''
+        if self.filtering.has_derivatives:
+            code += [
+                '''
+vec3 get_terrain_normal_%s(sampler2D heightmap, vec2 texcoord, HeightmapParameters params) {
+    vec2 pos = texcoord * params.scale + params.offset;
+    vec2 delta = %s * params.height_scale;
+    vec3 tangent = normalize(vec3(%f * params.u_scale, 0, delta.xx));
+    vec3 binormal = normalize(vec3(0, %f * params.v_scale, delta.xy));
+    return normalize(cross(tangent, binormal));
+}
+'''
+                % (
+                    self.name,
+                    self.filtering.derivatives('heightmap', 'pos'),
+                    self.filtering.delta_width,
+                    self.filtering.delta_width,
+                )
+            ]
+        else:
+            code += [
+                '''
 vec3 get_terrain_normal_%s(sampler2D heightmap, vec2 texcoord, HeightmapParameters params) {
     vec3 pixel_size = vec3(1.0, -1.0, 0) / textureSize(heightmap, 0).xxx;
     float u0 = get_terrain_height_%s(heightmap, texcoord + pixel_size.yz, params);
@@ -88,15 +107,13 @@ vec3 get_terrain_normal_%s(sampler2D heightmap, vec2 texcoord, HeightmapParamete
     float v1 = get_terrain_height_%s(heightmap, texcoord + pixel_size.zx, params);
     float deltax = u1 - u0;
     float deltay = v1 - v0;
-    //float deltax = textureBSplineDerivX(heightmap, texcoord);
-    //float deltay = textureBSplineDerivY(heightmap, texcoord);
-    vec3 tangent = normalize(vec3(2.0 * params.u_scale, 0, deltax));
-    vec3 binormal = normalize(vec3(0, 2.0 * params.v_scale, deltay));
+    vec3 tangent = normalize(vec3(2 * params.u_scale, 0, deltax));
+    vec3 binormal = normalize(vec3(0, 2 * params.v_scale, deltay));
     return normalize(cross(tangent, binormal));
 }
 '''
-            % (self.name, self.name, self.name, self.name, self.name)
-        ]
+                % (self.name, self.name, self.name, self.name, self.name)
+            ]
 
     def has_source_for(self, source):
         if source == 'height':

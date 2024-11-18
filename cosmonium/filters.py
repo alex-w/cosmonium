@@ -26,6 +26,8 @@ from .shaders.filters import TextureQuinticFilter, TextureBSplineFilter
 
 
 class TexFilter(object):
+    derivatives_texture_based = False
+
     def __init__(self, interpolator):
         self.interpolator = interpolator
 
@@ -133,6 +135,8 @@ class QuinticFilter(TexFilter):
 
 
 class BSplineFilter(TexFilter):
+    derivatives_texture_based = True
+
     def update_texture_config(self, texture_config):
         texture_config.minfilter = Texture.FT_linear
         texture_config.magfilter = Texture.FT_linear

@@ -20,6 +20,7 @@
 
 class TextureFilter:
     filter_name = None
+    derivatives_name = None
 
     def __init__(self, interpolator):
         self.interpolator = interpolator.get_data_source_interpolator()
@@ -30,8 +31,15 @@ class TextureFilter:
     def apply(self, sampler, pos):
         return f"{self.filter_name}({sampler}, {pos})"
 
+    def derivatives(self, sampler, pos):
+        return f"{self.derivatives_name}({sampler}, {pos})"
+
     def extra(self, shader, code):
         raise NotImplementedError()
+
+    @property
+    def has_derivatives(self) -> bool:
+        return self.derivatives_name is not None
 
 
 class TextureNearestFilter(TextureFilter):
@@ -138,6 +146,8 @@ vec4 texture_quintic_filter( sampler2D sam, vec2 p )
 
 class TextureBSplineFilter(TextureFilter):
     filter_name = 'texture_bspline_filter'
+    derivatives_name = 'texture_bspline_filter_derivatives'
+    delta_width = 1
 
     def get_id(self):
         return '-b'
@@ -192,19 +202,19 @@ vec4 texture_bspline_filter(sampler2D sam, vec2 pos)
             )
         ]
 
-    def textureBSplineDelta(self, code):
+    def texture_bspline_filter_derivatives(self, code):
         code += [
             '''
 vec4 cubic_deriv(float alpha) {
-    float alpha2 = alpha * alpha;
-    float w0 = -0.5 * alpha2 + alpha -0.5;
-    float w1 = 1.5 * alpha2 - 2.0 * alpha;
-    float w2 = -1.5 * alpha2 + alpha + 0.5;
-    float w3 = 0.5 * alpha2;
+    float alpha2 = alpha*alpha;
+    float w0 = 1./6. * (-3.*alpha2 + 6.*alpha - 3.);
+    float w1 = 1./6. * (9.*alpha2 -12.*alpha);
+    float w2 = 1./6. * (-9.*alpha2 + 6.*alpha + 3.);
+    float w3 = 1./6. * (3.*alpha2);
     return vec4(w0, w1, w2, w3);
 }
 
-float textureBSplineDerivX(sampler2D sam, vec2 pos)
+float texture_bspline_filter_derivatives_x(sampler2D sam, vec2 pos)
 {
     vec2 texSize = textureSize(sam, 0);
     pos *= texSize;
@@ -221,19 +231,26 @@ float textureBSplineDerivX(sampler2D sam, vec2 pos)
 
     offset /= texSize.xxyy;
 
-    float sx = s.x / (s.x + s.y);
+    float sx = s.y;
     float sy = s.z / (s.z + s.w);
 
-    float p00 = texture(sam, offset.xz).x;
-    float p01 = texture(sam, offset.yz).x;
-    float p10 = texture(sam, offset.xw).x;
-    float p11 = texture(sam, offset.yw).x;
+    float p00 = %s.x;
+    float p01 = %s.x;
+    float p10 = %s.x;
+    float p11 = %s.x;
 
-    float a = mix(p01, p00, sx);
-    float b = mix(p11, p10, sx);
-    return (b - a) * sy;
-}
-float textureBSplineDerivY(sampler2D sam, vec2 pos)
+    float a = (p01 - p00) * sx;
+    float b = (p11 - p10) * sx;
+    return mix(b, a, sy);
+}'''
+            % (
+                self.interpolator.apply('sam', 'offset.xz'),
+                self.interpolator.apply('sam', 'offset.yz'),
+                self.interpolator.apply('sam', 'offset.xw'),
+                self.interpolator.apply('sam', 'offset.yw'),
+            ),
+            '''
+float texture_bspline_filter_derivatives_y(sampler2D sam, vec2 pos)
 {
     vec2 texSize = textureSize(sam, 0);
     pos *= texSize;
@@ -251,19 +268,30 @@ float textureBSplineDerivY(sampler2D sam, vec2 pos)
     offset /= texSize.xxyy;
 
     float sx = s.x / (s.x + s.y);
-    float sy = s.z / (s.z + s.w);
+    float sy = s.w;
 
-    float p00 = texture(sam, offset.xz).x;
-    float p01 = texture(sam, offset.yz).x;
-    float p10 = texture(sam, offset.xw).x;
-    float p11 = texture(sam, offset.yw).x;
+    float p00 = %s.x;
+    float p01 = %s.x;
+    float p10 = %s.x;
+    float p11 = %s.x;
 
-    float a = (p01 - p00) * sx;
-    float b = (p11 - p10) * sx;
-    return mix(b, a, sy);
-}
-'''
+    float a = mix(p01, p00, sx);
+    float b = mix(p11, p10, sx);
+    return (b - a) * sy;
+}'''
+            % (
+                self.interpolator.apply('sam', 'offset.xz'),
+                self.interpolator.apply('sam', 'offset.yz'),
+                self.interpolator.apply('sam', 'offset.xw'),
+                self.interpolator.apply('sam', 'offset.yw'),
+            ),
+            '''
+vec2 texture_bspline_filter_derivatives(sampler2D sam, vec2 pos)
+{
+    return vec2(texture_bspline_filter_derivatives_x(sam, pos), texture_bspline_filter_derivatives_y(sam, pos));
+}''',
         ]
 
     def extra(self, shader, code):
         shader.add_function(code, 'texture_bspline_filter', self.texture_bspline_filter)
+        shader.add_function(code, 'texture_bspline_filter_derivatives', self.texture_bspline_filter_derivatives)
