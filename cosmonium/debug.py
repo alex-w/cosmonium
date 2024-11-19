@@ -206,9 +206,14 @@ class Debug:
             if selected.label is not None:
                 print("\tLabel visible:", selected.label.visible)
             if isinstance(selected, ReflectiveBody) and selected.surface is not None:
-                print("\tRing shadow:", selected.surface.shadows.ring_shadow is not None)
-                # print("\tSphere shadow:",
-                #     [x.body.get_friendly_name() for x in selected.surface.shadows.sphere_shadows.occluders])
+                print(
+                    "\tRing shadow:",
+                    [x.body.get_friendly_name() for x in selected.surface.shadows.rings_shadows.casters],
+                )
+                print(
+                    "\tSphere shadow:",
+                    [x.body.get_friendly_name() for x in selected.surface.shadows.sphere_shadows.shadow_casters],
+                )
             if isinstance(selected, StellarBody):
                 if selected.scene_anchor.scene_scale_factor is not None:
                     print("Scene")
