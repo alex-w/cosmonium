@@ -118,7 +118,7 @@ class PatchFactory:
         mean_height = 0.0
         if self.heightmap is not None and patch is not None:
             patch_data = self.heightmap.get_patch_data(patch, strict=False)
-            if patch_data is not None:
+            if patch_data is not None and patch_data.data_ready:
                 # TODO: This should be done inside the heightmap patch
                 height_scale = self.heightmap.height_scale
                 height_offset = self.heightmap.height_offset
