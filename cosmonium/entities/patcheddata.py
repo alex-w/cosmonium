@@ -56,13 +56,7 @@ class PatchData:
     def calc_scale_and_offset(self, shape_patch):
         delta = shape_patch.lod - self.data_lod
         scale = 1 << delta
-        # TODO: This should be moved into the patch
-        if shape_patch.coord == TexCoord.Cylindrical:
-            x_tex = (shape_patch.x // scale) * scale
-            y_tex = (shape_patch.y // scale) * scale
-            x_delta = (shape_patch.x - x_tex) / scale
-            y_delta = (shape_patch.y - y_tex) / scale
-        elif shape_patch.coord != TexCoord.Flat:
+        if shape_patch.coord != TexCoord.Flat:
             x_tex = (shape_patch.x // scale) * scale
             y_tex = (shape_patch.y // scale) * scale
             x_delta = (shape_patch.x - x_tex) / scale
