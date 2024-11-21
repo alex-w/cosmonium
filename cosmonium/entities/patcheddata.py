@@ -212,6 +212,7 @@ class PatchedData(DataSource):
                     if not max_lod_parent.loaded:
                         await max_lod_parent.load(tasks_tree, max_lod_parent.patch)
                     patch_data.calc_sub_patch(max_lod_parent)
+                    patch_data.loaded = True
                 else:
                     await patch_data.load(tasks_tree, patch)
         else:
