@@ -167,6 +167,11 @@ class TextureHeightmapPatch(HeightmapPatch):
         (texture_data, texture_size, texture_lod) = self.data_source.source.get_texture(patch, strict=True)
         if texture_data is not None:
             self.configure_data(texture_data)
+        else:
+            parent_data = self.parent.get_or_create(patch.parent)
+            await self.parent.load(tasks_tree, patch.parent, None)
+            self.calc_sub_patch(parent_data)
+            self.loaded = True
 
     def clear(self, instance):
         HeightmapPatch.clear(self, instance)
