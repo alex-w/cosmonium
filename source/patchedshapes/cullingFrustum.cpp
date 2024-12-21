@@ -36,8 +36,10 @@ CullingFrustumBase::is_patch_in_view(QuadTreeNode *patch)
   return is_bb_in_view(patch->bounds, patch->offset_vector, patch->offset);
 }
 
-CullingFrustum::CullingFrustum(Lens *lens, LMatrix4 transform_mat, double near_distance, double far_distance,
+CullingFrustum::CullingFrustum(Lens *lens, LMatrix4 transform_mat, LQuaterniond rot,
+    double near_distance, double far_distance,
     bool offset_body_center, LVector3d model_body_center_offset, bool shift_patch_origin) :
+    rot(rot),
     offset_body_center(offset_body_center),
     model_body_center_offset(model_body_center_offset),
     shift_patch_origin(shift_patch_origin)
@@ -49,7 +51,7 @@ CullingFrustum::CullingFrustum(Lens *lens, LMatrix4 transform_mat, double near_d
 }
 
 bool
-CullingFrustum::is_bb_in_view(BoundingBox *bb, LVector3d patch_offset_vector, double patch_offset)
+CullingFrustum::is_bb_in_view(PatchBoundingBox *bb, LVector3d patch_offset_vector, double patch_offset)
 {
   LVector3d offset(0);
   if (offset_body_center) {
@@ -58,15 +60,16 @@ CullingFrustum::is_bb_in_view(BoundingBox *bb, LVector3d patch_offset_vector, do
   if (shift_patch_origin) {
     offset = offset + patch_offset_vector * patch_offset;
   }
-  BoundingBox obj_bounds(bb->get_min() + LCAST(PN_stdfloat, offset), bb->get_max() + LCAST(PN_stdfloat, offset));
-  int intersect = lens_bounds->contains(&obj_bounds);
+  PT(BoundingBox) obj_bounds = bb->create_bounding_volume(rot, offset);
+  int intersect = lens_bounds->contains(obj_bounds);
   return (intersect & BoundingVolume::IF_some) != 0;
 }
 
-HorizonCullingFrustum::HorizonCullingFrustum(Lens *lens, LMatrix4 transform_mat,
+HorizonCullingFrustum::HorizonCullingFrustum(Lens *lens, LMatrix4 transform_mat, LQuaterniond rot,
     double near_distance, double max_radius, double altitude_to_min_radius, double scale, unsigned int max_lod,
     bool offset_body_center, LVector3d model_body_center_offset, bool shift_patch_origin,
     bool cull_far_patches, unsigned int cull_far_patches_threshold) :
+    rot(rot),
     offset_body_center(offset_body_center),
     model_body_center_offset(model_body_center_offset),
     shift_patch_origin(shift_patch_origin)
@@ -86,7 +89,7 @@ HorizonCullingFrustum::HorizonCullingFrustum(Lens *lens, LMatrix4 transform_mat,
 }
 
 bool
-HorizonCullingFrustum::is_bb_in_view(BoundingBox *bb, LVector3d patch_offset_vector, double patch_offset)
+HorizonCullingFrustum::is_bb_in_view(PatchBoundingBox *bb, LVector3d patch_offset_vector, double patch_offset)
 {
   LVector3d offset(0);
   if (offset_body_center) {
@@ -95,7 +98,7 @@ HorizonCullingFrustum::is_bb_in_view(BoundingBox *bb, LVector3d patch_offset_vec
   if (shift_patch_origin) {
     offset = offset + patch_offset_vector * patch_offset;
   }
-  BoundingBox obj_bounds(bb->get_min() + LCAST(PN_stdfloat, offset), bb->get_max() + LCAST(PN_stdfloat, offset));
-  int intersect = lens_bounds->contains(&obj_bounds);
+  PT(BoundingBox) obj_bounds = bb->create_bounding_volume(rot, offset);
+  int intersect = lens_bounds->contains(obj_bounds);
   return (intersect & BoundingVolume::IF_some) != 0;
 }

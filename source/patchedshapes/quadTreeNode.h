@@ -23,7 +23,7 @@
 #include "pandabase.h"
 #include "luse.h"
 #include "referenceCount.h"
-#include "boundingBox.h"
+#include "patchBoundingBox.h"
 #include <vector>
 #include "py_panda.h"
 
@@ -34,7 +34,7 @@ class LodResult;
 class QuadTreeNode : public ReferenceCount
 {
 PUBLISHED:
-  QuadTreeNode(PyObject *patch, unsigned int lod, unsigned int density, LPoint3d centre, double length, LVector3d offset_vector, double offset, BoundingBox *bounds);
+  QuadTreeNode(PyObject *patch, unsigned int lod, unsigned int density, LPoint3d centre, double length, LVector3d offset_vector, double offset, PatchBoundingBox *bounds);
   virtual ~QuadTreeNode(void);
 
   void set_shown(bool shown);
@@ -57,7 +57,7 @@ PUBLISHED:
 
   INLINE PyObject *get_patch(void);
 
-  INLINE BoundingBox *get_bounds(void);
+  INLINE PatchBoundingBox *get_bounds(void);
 
   MAKE_PROPERTY(patch, get_patch);
   MAKE_PROPERTY(bounds, get_bounds);
@@ -78,9 +78,9 @@ PUBLISHED:
 
 public:
   PyObject *patch;
-  PT(BoundingBox) bounds;
+  PT(PatchBoundingBox) bounds;
   std::vector<PT(QuadTreeNode)> children;
-  std::vector<PT(BoundingBox)> children_bb;
+  std::vector<PT(PatchBoundingBox)> children_bb;
   std::vector<LVector3d> children_offset_vector;
   std::vector<double> children_offset;
 };
@@ -91,7 +91,7 @@ INLINE PyObject *QuadTreeNode::get_patch(void)
   return patch;
 }
 
-INLINE BoundingBox *QuadTreeNode::get_bounds(void)
+INLINE PatchBoundingBox *QuadTreeNode::get_bounds(void)
 {
   return bounds;
 }

@@ -17,13 +17,14 @@
 # along with Cosmonium.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-from panda3d.core import LPoint3d, LVector3, LVector3d, LVector4, LMatrix4
+from panda3d.core import LPoint3d, LVector3, LVector3d, LVector4, LMatrix3d, LMatrix4, LQuaterniond
 from panda3d.core import NodePath
 
 from ..geometry import geometry
 from ..textures import TexCoord
 from .. import settings
 
+from .boundingbox import PatchBoundingBox
 from .patchedshapes import CullingFrustum, QuadTreeNode
 from .patchedshapes import PatchBase, PatchedShapeBase, BoundingBoxShape, PatchLayer, PatchFactory
 from .patchneighbours import PatchNeighboursBase
@@ -53,8 +54,11 @@ class Tile(PatchBase):
     def create_quadtree_node(self, min_height, max_height):
         centre = LPoint3d(self.x0 + self.half_size, self.y0 + self.half_size, 0.0)
         normal = LVector3d.up()
-        bounds = geometry.PatchAABB(self.x0, self.y0, self.size, 1.0, min_height, max_height)
-        self.quadtree_node = QuadTreeNode(self, self.lod, self.density, centre, self.size, normal, 0.0, bounds)
+        points = geometry.PatchBoundingPoints(self.x0, self.y0, self.size, 1.0, min_height, max_height)
+        bounding_volume = PatchBoundingBox(points)
+        self.quadtree_node = QuadTreeNode(
+            self, self.lod, self.density, centre, self.size, normal, 0.0, bounding_volume
+        )
 
     def str_id(self):
         return "%d - %g %g" % (self.lod, self.x / self.size, self.y / self.size)
@@ -186,18 +190,23 @@ class TiledShape(PatchedShapeBase):
         PatchedShapeBase.__init__(self, factory, None, lod_control)
         self.scale = scale
 
-    def create_culling_frustum(self, scene_manager, camera):
+    def create_culling_frustum(self, scene_manager, camera, tbn):
         cam_transform = camera.camera_np.get_net_transform()
         cam_transform_mat = cam_transform.get_mat()
+        tbn_inv = LMatrix3d()
+        tbn_inv.invert_from(tbn)
+        rot = LQuaterniond()
+        rot.set_from_matrix(tbn_inv)
         transform_mat = LMatrix4()
         transform = self.instance.get_net_transform()
         transform_mat.invert_from(transform.get_mat())
-        transform_mat = cam_transform_mat * transform_mat
+        transform_mat = cam_transform_mat * transform_mat * tbn_inv
         near = camera.lens.get_near()
         far = camera.lens.get_far()
         self.culling_frustum = CullingFrustum(
             camera.lens,
             transform_mat,
+            rot,
             near,
             far,
             settings.offset_body_center,

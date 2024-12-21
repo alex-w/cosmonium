@@ -18,9 +18,10 @@
 #
 
 from math import sin, cos, pi, atan2, sqrt, asin
-from panda3d.core import Geom, GeomNode, GeomPatches, GeomPoints, GeomVertexData, GeomVertexArrayFormat, InternalName
-from panda3d.core import LVector3d, GlobPattern, BoundingBox, LPoint3
-from panda3d.core import GeomVertexFormat, GeomTriangles, GeomVertexWriter, ColorAttrib
+from panda3d.core import Geom, GeomNode, GeomPatches, GeomPoints, GeomTriangles
+from panda3d.core import GeomVertexFormat, GeomVertexData, GeomVertexArrayFormat, InternalName
+from panda3d.core import GeomVertexRewriter, GeomVertexWriter
+from panda3d.core import LVector3d, GlobPattern, LPoint3, ColorAttrib
 from panda3d.core import NodePath, VBase3, Vec3, LPoint3d, LPoint2d
 from panda3d.egg import EggData, EggVertexPool, EggVertex, EggPolygon, loadEggData
 
@@ -104,6 +105,14 @@ def BoundingBoxGeom(box):
 
     geom.add_primitive(prim)
     return path
+
+
+def BoundingBoxGeomUpdate(path, box):
+    geom = path.node().modify_geom(0)
+    vdata = geom.modify_vertex_data()
+    gvw = GeomVertexRewriter(vdata, InternalName.get_vertex())
+    for i in range(8):
+        gvw.set_data3(box.get_point(i))
 
 
 def CubeGeom():
@@ -385,17 +394,7 @@ def UVPatch(
     return path
 
 
-def halfSphereAABB(mean_height, positive, offset=0.0):
-    if positive:
-        min_points = LPoint3(-1, 0 - offset, -1)
-        max_points = LPoint3(1, 1 - offset, 1)
-    else:
-        min_points = LPoint3(-1, offset - 1, -1)
-        max_points = LPoint3(1, offset, 1)
-    return BoundingBox(min_points, max_points)
-
-
-def UVPatchAABB(axes, min_height, max_height, x0, y0, x1, y1, offset=0.0):
+def UVPatchBoundingPoints(axes, min_height, max_height, x0, y0, x1, y1, offset=0.0):
     points = []
     if min_height != max_height:
         heights = (min_height, max_height)
@@ -413,14 +412,7 @@ def UVPatchAABB(axes, min_height, max_height, x0, y0, x1, y1, offset=0.0):
                 if offset != 0.0:
                     point -= offset_vector
                 points.append(point)
-    x_min = min(p.get_x() for p in points)
-    x_max = max(p.get_x() for p in points)
-    y_min = min(p.get_y() for p in points)
-    y_max = max(p.get_y() for p in points)
-    z_min = min(p.get_z() for p in points)
-    z_max = max(p.get_z() for p in points)
-    box = BoundingBox(LPoint3(x_min, y_min, z_min), LPoint3(x_max, y_max, z_max))
-    return box
+    return points
 
 
 def UVPatchedSphere(radius=1, rings=8, sectors=16, lod=2):
@@ -895,8 +887,8 @@ def Tile(
     return path
 
 
-def TileAABB(size=1.0, height=1.0):
-    return BoundingBox(LPoint3(0, 0, -height), LPoint3(size, size, height))
+def TileBoundingPoints(size=1.0, height=1.0):
+    return [LPoint3(0, 0, -height), LPoint3(size, size, height)]
 
 
 def Patch(size=1.0):
@@ -921,10 +913,8 @@ def Patch(size=1.0):
     return path
 
 
-def PatchAABB(x=0.0, y=0.0, size=1.0, scale=1.0, min_height=-1.0, max_height=1.0):
-    return BoundingBox(
-        LPoint3(x * scale, y * scale, min_height), LPoint3((x + size) * scale, (y + size) * scale, max_height)
-    )
+def PatchBoundingPoints(x=0.0, y=0.0, size=1.0, scale=1.0, min_height=-1.0, max_height=1.0):
+    return [LPoint3(x * scale, y * scale, min_height), LPoint3((x + size) * scale, (y + size) * scale, max_height)]
 
 
 def convert_xy(x0, y0, x1, y1, x_inverted=False, y_inverted=False, xy_swap=False):
@@ -1256,7 +1246,7 @@ def SquaredDistanceSquarePatchOffsetVector(axes, x0, y0, x1, y1, x_inverted=Fals
     return SquaredDistanceSquarePatchPoint(axes, 0.5, 0.5, x0, y0, x1, y1, None, x_inverted, y_inverted, xy_swap)
 
 
-def SquaredDistanceSquarePatchAABB(
+def SquaredDistanceSquarePatchBoundingPoints(
     axes, min_height, max_height, x0, y0, x1, y1, offset=None, x_inverted=False, y_inverted=False, xy_swap=False
 ):
     points = []
@@ -1282,14 +1272,7 @@ def SquaredDistanceSquarePatchAABB(
                 if offset is not None:
                     point -= offset_vector
                 points.append(point)
-    x_min = min(p.get_x() for p in points)
-    x_max = max(p.get_x() for p in points)
-    y_min = min(p.get_y() for p in points)
-    y_max = max(p.get_y() for p in points)
-    z_min = min(p.get_z() for p in points)
-    z_max = max(p.get_z() for p in points)
-    box = BoundingBox(LPoint3(x_min, y_min, z_min), LPoint3(x_max, y_max, z_max))
-    return box
+    return points
 
 
 @named_pstat("geom")
@@ -1475,7 +1458,7 @@ def NormalizedSquarePatchOffsetVector(axes, x0, y0, x1, y1, x_inverted=False, y_
     return NormalizedSquarePatchPoint(axes, 0.5, 0.5, x0, y0, x1, y1, None, x_inverted, y_inverted, xy_swap)
 
 
-def NormalizedSquarePatchAABB(
+def NormalizedSquarePatchBoundingPoints(
     axes, min_height, max_height, x0, y0, x1, y1, offset=None, x_inverted=False, y_inverted=False, xy_swap=False
 ):
     points = []
@@ -1497,14 +1480,7 @@ def NormalizedSquarePatchAABB(
                 if offset is not None:
                     point -= offset_vector
                 points.append(point)
-    x_min = min(p.get_x() for p in points)
-    x_max = max(p.get_x() for p in points)
-    y_min = min(p.get_y() for p in points)
-    y_max = max(p.get_y() for p in points)
-    z_min = min(p.get_z() for p in points)
-    z_max = max(p.get_z() for p in points)
-    box = BoundingBox(LPoint3(x_min, y_min, z_min), LPoint3(x_max, y_max, z_max))
-    return box
+    return points
 
 
 @named_pstat("geom")

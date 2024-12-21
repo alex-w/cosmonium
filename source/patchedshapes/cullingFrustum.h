@@ -25,7 +25,7 @@
 #include "referenceCount.h"
 
 class BoundingVolume;
-class BoundingBox;
+class PatchBoundingBox;
 class Lens;
 class QuadTreeNode;
 
@@ -33,7 +33,7 @@ class CullingFrustumBase : public ReferenceCount
 {
 PUBLISHED:
     virtual ~CullingFrustumBase(void);
-    virtual bool is_bb_in_view(BoundingBox *bb, LVector3d patch_normal, double patch_offset) = 0;
+    virtual bool is_bb_in_view(PatchBoundingBox *bb, LVector3d patch_normal, double patch_offset) = 0;
 
     virtual bool is_patch_in_view(QuadTreeNode *node);
 };
@@ -41,9 +41,10 @@ PUBLISHED:
 class CullingFrustum : public CullingFrustumBase
 {
 PUBLISHED:
-    CullingFrustum(Lens *lens, LMatrix4 transform_mat, double near_distance, double far_distance,
+    CullingFrustum(Lens *lens, LMatrix4 transform_mat, LQuaterniond rot,
+        double near_distance, double far_distance,
         bool offset_body_center, LVector3d model_body_center_offset, bool shift_patch_origin);
-    virtual bool is_bb_in_view(BoundingBox *bb, LVector3d patch_normal, double patch_offset);
+    virtual bool is_bb_in_view(PatchBoundingBox *bb, LVector3d patch_normal, double patch_offset);
 
     INLINE Lens *get_lens(void) { return lens; }
 
@@ -52,6 +53,7 @@ PUBLISHED:
 protected:
     PT(Lens) lens;
     PT(BoundingVolume) lens_bounds;
+    LQuaterniond rot;
     bool offset_body_center;
     LVector3d model_body_center_offset;
     bool shift_patch_origin;
@@ -60,11 +62,11 @@ protected:
 class HorizonCullingFrustum : public CullingFrustumBase
 {
 PUBLISHED:
-    HorizonCullingFrustum(Lens *lens, LMatrix4 transform_mat,
+    HorizonCullingFrustum(Lens *lens, LMatrix4 transform_mat, LQuaterniond rot,
         double near_distance, double max_radius, double altitude_to_min_radius, double scale, unsigned int max_lod,
         bool offset_body_center, LVector3d model_body_center_offset, bool shift_patch_origin,
         bool cull_far_patches, unsigned int cull_far_patches_threshold);
-    virtual bool is_bb_in_view(BoundingBox *bb, LVector3d patch_normal, double patch_offset);
+    virtual bool is_bb_in_view(PatchBoundingBox *bb, LVector3d patch_normal, double patch_offset);
 
     INLINE Lens *get_lens(void) { return lens; }
 
@@ -73,6 +75,7 @@ PUBLISHED:
 protected:
     PT(Lens) lens;
     PT(BoundingVolume) lens_bounds;
+    LQuaterniond rot;
     bool offset_body_center;
     LVector3d model_body_center_offset;
     bool shift_patch_origin;

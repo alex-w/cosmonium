@@ -33,12 +33,13 @@ class CullingFrustumBase:
 
 class CullingFrustum(CullingFrustumBase):
     def __init__(
-        self, lens, transform_mat, near, far, offset_body_center, model_body_center_offset, shift_patch_origin
+        self, lens, transform_mat, rot, near, far, offset_body_center, model_body_center_offset, shift_patch_origin
     ):
         self.lens = lens.make_copy()
         self.lens.set_near_far(near, far)
         self.lens_bounds = self.lens.make_bounds()
         self.lens_bounds.xform(transform_mat)
+        self.rot = rot
         self.offset_body_center = offset_body_center
         self.model_body_center_offset = model_body_center_offset
         self.shift_patch_origin = shift_patch_origin
@@ -50,7 +51,7 @@ class CullingFrustum(CullingFrustumBase):
         if self.shift_patch_origin:
             offset = offset + patch_offset_vector * patch_offset
         offset = LPoint3(*offset)
-        obj_bounds = BoundingBox(bb.get_min() + offset, bb.get_max() + offset)
+        obj_bounds = bb.create_bounding_volume(self.rot, offset)
         intersect = self.lens_bounds.contains(obj_bounds)
         return (intersect & BoundingBox.IF_some) != 0
 
@@ -60,6 +61,7 @@ class HorizonCullingFrustum(CullingFrustumBase):
         self,
         lens,
         transform_mat,
+        rot,
         near,
         max_radius,
         altitude_to_min_radius,
@@ -81,6 +83,7 @@ class HorizonCullingFrustum(CullingFrustumBase):
         self.lens.set_near_far(near, far)
         self.lens_bounds = self.lens.make_bounds()
         self.lens_bounds.xform(transform_mat)
+        self.rot = rot
         self.offset_body_center = offset_body_center
         self.model_body_center_offset = model_body_center_offset
         self.shift_patch_origin = shift_patch_origin
@@ -92,6 +95,6 @@ class HorizonCullingFrustum(CullingFrustumBase):
         if self.shift_patch_origin:
             offset = offset + patch_offset_vector * patch_offset
         offset = LPoint3(*offset)
-        obj_bounds = BoundingBox(bb.get_min() + offset, bb.get_max() + offset)
+        obj_bounds = bb.create_bounding_volume(self.rot, offset)
         intersect = self.lens_bounds.contains(obj_bounds)
         return (intersect & BoundingBox.IF_some) != 0

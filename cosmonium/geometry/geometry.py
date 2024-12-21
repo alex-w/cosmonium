@@ -40,13 +40,13 @@ except ImportError as e:
     from .pygeometry.geometry import Tile  # noqa: F401
     from .pygeometry.geometry import TessellationInfo  # noqa: F401
 
-from .pygeometry.geometry import BoundingBoxGeom  # noqa: F401
+from .pygeometry.geometry import BoundingBoxGeom, BoundingBoxGeomUpdate  # noqa: F401
 from .pygeometry.geometry import UVSphere, IcoSphere  # noqa: F401
 from .pygeometry.geometry import RingFaceGeometry  # noqa: F401
-from .pygeometry.geometry import UVPatchOffsetVector, UVPatchPoint, UVPatchAABB, halfSphereAABB  # noqa: F401
+from .pygeometry.geometry import UVPatchOffsetVector, UVPatchPoint, UVPatchBoundingPoints  # noqa: F401
 from .pygeometry.geometry import NormalizedSquarePatchOffsetVector, NormalizedSquarePatchPoint  # noqa: F401
-from .pygeometry.geometry import NormalizedSquarePatchAABB  # noqa: F401
+from .pygeometry.geometry import NormalizedSquarePatchBoundingPoints  # noqa: F401
 from .pygeometry.geometry import SquaredDistanceSquarePatchOffsetVector, SquaredDistanceSquarePatchPoint  # noqa: F401
-from .pygeometry.geometry import SquaredDistanceSquarePatchAABB  # noqa: F401
-from .pygeometry.geometry import Patch, PatchAABB  # noqa: F401
+from .pygeometry.geometry import SquaredDistanceSquarePatchBoundingPoints  # noqa: F401
+from .pygeometry.geometry import Patch, PatchBoundingPoints  # noqa: F401
 from .pygeometry.ui import FrameGeom  # noqa: F401

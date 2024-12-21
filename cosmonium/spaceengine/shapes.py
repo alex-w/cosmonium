@@ -19,6 +19,7 @@
 
 
 from panda3d.core import LQuaternion, LVector3d
+
 from ..patchedshapes.patchedshapes import PatchFactory, PatchLayer, SquarePatchBase, NormalizedSquareShape
 from ..geometry import geometry
 from .. import settings
@@ -40,7 +41,9 @@ class SpaceEngineTextureSquarePatch(SquarePatchBase):
 
     def create_bounding_volume(self, axes, min_height, max_height):
         (x0, y0, x1, y1) = self.calc_xy()
-        return geometry.NormalizedSquarePatchAABB(axes, min_height, max_height, x0, y0, x1, y1, offset=self.offset)
+        return geometry.NormalizedSquarePatchBoundingPoints(
+            axes, min_height, max_height, x0, y0, x1, y1, offset=self.offset
+        )
 
     def create_centre(self, axes):
         (x0, y0, x1, y1) = self.calc_xy()

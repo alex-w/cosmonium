@@ -20,8 +20,8 @@
 
 from direct.showbase.ShowBaseGlobal import globalClock
 from math import cos, sin, pi, sqrt, copysign, log
-from panda3d.core import OmniBoundingVolume, GeomNode
-from panda3d.core import LVector3d, LVector4, LPoint2d, LPoint3d
+from panda3d.core import OmniBoundingVolume, GeomNode, LMatrix3d
+from panda3d.core import LVector3, LVector3d, LVector4, LPoint2d, LPoint3d
 from panda3d.core import LColor, LQuaterniond, LQuaternion, LMatrix4, LVecBase4i
 from panda3d.core import NodePath
 from panda3d.core import RenderState, ColorAttrib, RenderModeAttrib, CullFaceAttrib, ShaderAttrib
@@ -35,6 +35,7 @@ from ..shapes.base import Shape
 from ..textures import TexCoord
 from .. import settings
 
+from .boundingbox import PatchBoundingBox
 from .cullingfrustum import CullingFrustum, HorizonCullingFrustum
 from .lodresult import LodResult
 from .patchneighbours import PatchNeighbours
@@ -51,7 +52,8 @@ class BoundingBoxShape:
     def create_instance(self):
         if self.instance is not None:
             return
-        self.instance = geometry.BoundingBoxGeom(self.box)
+        bb = self.box.create_bounding_volume(LQuaternion(), LVector3(0))
+        self.instance = geometry.BoundingBoxGeom(bb)
         if BoundingBoxShape.state is None:
             BoundingBoxShape.state = RenderState.make(
                 ColorAttrib.make_flat(LColor(0.3, 1.0, 0.5, 1.0)),
@@ -62,6 +64,10 @@ class BoundingBoxShape:
         self.instance.set_state(self.state)
         self.instance.set_light_off(True)
         return self.instance
+
+    def update_instance(self, rot):
+        bb = self.box.create_bounding_volume(rot, LVector3(0))
+        geometry.BoundingBoxGeomUpdate(self.instance, bb)
 
     def remove_instance(self):
         if self.instance is not None:
@@ -295,12 +301,10 @@ class SpherePatch(PatchBase):
         length = (1.0 + mean_height) * 2 * pi / nb_sectors * cos(theta)
         scale = max(*axes)
         offset_vector = geometry.UVPatchOffsetVector(axes / scale, self.x0, self.y0, self.x1, self.y1)
-        if self.lod > 0:
-            bounds = geometry.UVPatchAABB(
-                axes / scale, min_height, max_height, self.x0, self.y0, self.x1, self.y1, offset=self.offset
-            )
-        else:
-            bounds = geometry.halfSphereAABB(mean_height, self.x == 1, self.offset)
+        points = geometry.UVPatchBoundingPoints(
+            axes / scale, min_height, max_height, self.x0, self.y0, self.x1, self.y1, offset=self.offset
+        )
+        bounding_volume = PatchBoundingBox(points)
         centre = geometry.UVPatchPoint(axes / scale, 0.5, 0.5, self.x0, self.y0, self.x1, self.y1)
         centre += centre.normalized() * mean_height
         v_perimeter = (
@@ -315,7 +319,7 @@ class SpherePatch(PatchBase):
         # print("V", centre, sqrt(centre[0] * centre[0] + centre[1] * centre[1]), axes[2] / scale)
         length = min(v_perimeter, h_perimeter)
         self.quadtree_node = QuadTreeNode(
-            self, self.lod, self.density, centre, length, offset_vector, self.offset, bounds
+            self, self.lod, self.density, centre, length, offset_vector, self.offset, bounding_volume
         )
 
     def str_id(self):
@@ -387,7 +391,7 @@ class SquarePatchBase(PatchBase):
         return ['Right', 'Left', 'Back', 'Front', 'Top', 'Bottom'][face]
 
     rotations = [LQuaterniond(), LQuaterniond(), LQuaterniond(), LQuaterniond(), LQuaterniond(), LQuaterniond()]
-    rotations_mat = [LMatrix4(), LMatrix4(), LMatrix4(), LMatrix4(), LMatrix4(), LMatrix4()]
+    rotations_mat = [LMatrix3d(), LMatrix3d(), LMatrix3d(), LMatrix3d(), LMatrix3d(), LMatrix3d()]
     rotations[0].setHpr(LVector3d(0, 0, 90))  # right
     rotations[1].setHpr(LVector3d(0, 0, -90))  # left
     rotations[2].setHpr(LVector3d(0, 90, 0))  # back
@@ -427,8 +431,8 @@ class SquarePatchBase(PatchBase):
         orientation_mat = self.rotations_mat[self.face]
         rotated_axes = orientation.conjugate().xform(axes)
         rotated_axes = LVector3d(abs(rotated_axes[0]), abs(rotated_axes[1]), abs(rotated_axes[2]))
-        bounds = self.create_bounding_volume(rotated_axes / scale, min_height, max_height)
-        bounds.xform(orientation_mat)
+        bounding_volume = self.create_bounding_volume(rotated_axes / scale, min_height, max_height)
+        bounding_volume.xform(orientation_mat)
         centre = self.create_centre(rotated_axes / scale)
         centre = orientation.xform(centre)
         face_offset_vector = self.face_offset_vector(rotated_axes / scale)
@@ -441,7 +445,7 @@ class SquarePatchBase(PatchBase):
             length,
             offset_vector,
             self.offset if self.offset is not None else 0.0,
-            bounds,
+            bounding_volume,
         )
 
     def face_offset_vector(self, axes):
@@ -496,9 +500,11 @@ class NormalizedSquarePatch(SquarePatchBase):
         return geometry.NormalizedSquarePatchOffsetVector(axes, self.x0, self.y0, self.x1, self.y1)
 
     def create_bounding_volume(self, axes, min_height, max_height):
-        return geometry.NormalizedSquarePatchAABB(
+        points = geometry.NormalizedSquarePatchBoundingPoints(
             axes, min_height, max_height, self.x0, self.y0, self.x1, self.y1, offset=self.offset
         )
+        bounding_volume = PatchBoundingBox(points)
+        return bounding_volume
 
     def create_centre(self, axes):
         return geometry.NormalizedSquarePatchPoint(axes, 0.5, 0.5, self.x0, self.y0, self.x1, self.y1)
@@ -538,9 +544,11 @@ class SquaredDistanceSquarePatch(SquarePatchBase):
         return geometry.SquaredDistanceSquarePatchOffsetVector(axes, self.x0, self.y0, self.x1, self.y1)
 
     def create_bounding_volume(self, axes, min_height, max_height):
-        return geometry.SquaredDistanceSquarePatchAABB(
+        points = geometry.SquaredDistanceSquarePatchBoundingPoints(
             axes, min_height, max_height, self.x0, self.y0, self.x1, self.y1, offset=self.offset
         )
+        bounding_volume = PatchBoundingBox(points)
+        return bounding_volume
 
     def create_centre(self, axes):
         return geometry.SquaredDistanceSquarePatchPoint(axes, 0.5, 0.5, self.x0, self.y0, self.x1, self.y1)
@@ -597,6 +605,8 @@ class PatchedShapeBase(Shape):
         self.linked_objects = []
         self.lod_control = lod_control
         self.max_lod = 0
+        self.tbn_rot = None
+        self.tbn_rot_inv = None
         self.culling_frustum = None
         self.frustum_node = None
         self.frustum_rel_position = None
@@ -766,7 +776,7 @@ class PatchedShapeBase(Shape):
     def xform_cam_to_model(self, camera_pos):
         pass
 
-    def create_culling_frustum(self, scene_manager, camera):
+    def create_culling_frustum(self, scene_manager, camera, tbn):
         pass
 
     def create_frustum_node(self, scene_anchor):
@@ -796,13 +806,21 @@ class PatchedShapeBase(Shape):
             return [], []
         self.update_model_body_center_offset()
         (model_camera_pos, model_camera_vector, coord) = self.xform_cam_to_model(camera_pos)
-        (tangent, binormal, normal) = self.parent.body.get_tangent_plane_under(camera_pos)
+        (tangent, binormal, normal) = self.parent.get_tangent_plane_under(model_camera_pos * self.parent.height_scale)
+        tbn = LMatrix3d(tangent, -normal, binormal)
+        # tbn = LMatrix3d.ident_mat()
+        self.tbn_rot = LQuaterniond()
+        self.tbn_rot.set_from_matrix(tbn)
+        self.tbn_rot_inv = LQuaterniond()
+        self.tbn_rot_inv.set_from_matrix(tbn)
+        self.tbn_rot_inv.conjugate_in_place()
+
         surface_point = self.parent.body.get_point_under(camera_pos)
         direction = camera_pos - surface_point
         # print(direction.dot(normal), direction.length())
         # print(direction.dot(normal), direction.dot(normal) / self.parent.height_scale)
         altitude_to_ground = direction.dot(normal) / self.parent.height_scale
-        self.create_culling_frustum(self.owner.context.scene_manager, self.owner.context.observer)
+        self.create_culling_frustum(self.owner.context.scene_manager, self.owner.context.observer, tbn)
         self.create_frustum_node(self.owner.scene_anchor)
         self.to_split = []
         self.to_merge = []
@@ -979,20 +997,26 @@ class EllipsoidPatchedShape(PatchedShapeBase):
         PatchedShapeBase.__init__(self, factory, heightmap, lod_control)
         self.model_body_center_offset = LVector3d()
 
-    def create_culling_frustum(self, scene_manager, camera):
+    def create_culling_frustum(self, scene_manager, camera, tbn):
         min_radius = self.parent.body.surface.get_min_radius()
         max_radius = self.parent.body.surface.get_max_radius()
         altitude_to_min_radius = self.parent.body.anchor.distance_to_obs - min_radius
+        # print("CAM", camera.camera_np.get_net_transform())
         cam_transform_mat = camera.camera_np.get_net_transform().get_mat()
+        tbn_inv = LMatrix3d()
+        tbn_inv.invert_from(tbn)
+        rot = LQuaterniond()
+        rot.set_from_matrix(tbn_inv)
         transform_mat = LMatrix4()
         transform = self.instance.get_net_transform()
         transform_mat.invert_from(transform.get_mat())
-        transform_mat = cam_transform_mat * transform_mat
+        transform_mat = cam_transform_mat * transform_mat * tbn_inv
         near = 1.0e-6
         if settings.use_horizon_culling:
             self.culling_frustum = HorizonCullingFrustum(
                 camera.lens,
                 transform_mat,
+                rot,
                 near,
                 max_radius,
                 altitude_to_min_radius,
@@ -1011,6 +1035,7 @@ class EllipsoidPatchedShape(PatchedShapeBase):
             self.culling_frustum = CullingFrustum(
                 camera.lens,
                 transform_mat,
+                rot,
                 near,
                 far,
                 settings.offset_body_center,
@@ -1029,7 +1054,9 @@ class EllipsoidPatchedShape(PatchedShapeBase):
                     patch_offset = body_offset
                 patch.instance.setPos(*patch_offset)
                 if patch.bounds_shape.instance is not None:
-                    patch.bounds_shape.instance.setPos(*patch_offset)
+                    patch.bounds_shape.update_instance(self.tbn_rot_inv)
+                    patch.bounds_shape.instance.set_pos(*patch_offset)
+                    patch.bounds_shape.instance.set_quat(LQuaternion(*self.tbn_rot))
 
     def xform_cam_to_model(self, camera_pos):
         position = self.parent.body.anchor.get_local_position()

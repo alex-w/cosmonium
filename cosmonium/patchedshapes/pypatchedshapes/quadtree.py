@@ -50,7 +50,7 @@ class QuadTreeNode:
 
     def add_child(self, child):
         self.children.append(child)
-        self.children_bb.append(child.bounds.make_copy())
+        self.children_bb.append(child.bounds)
         self.children_offset_vector.append(child.offset_vector)
         self.children_offset.append(child.offset)
 

@@ -25,7 +25,7 @@
 #include "quadTreeNodeCollection.h"
 #include "quadTreeNode.h"
 
-QuadTreeNode::QuadTreeNode(PyObject *patch, unsigned int lod, unsigned int density, LPoint3d centre, double length, LVector3d offset_vector, double offset, BoundingBox *bounds) :
+QuadTreeNode::QuadTreeNode(PyObject *patch, unsigned int lod, unsigned int density, LPoint3d centre, double length, LVector3d offset_vector, double offset, PatchBoundingBox *bounds) :
     patch(patch),
     lod(lod),
     density(density),
@@ -69,7 +69,7 @@ void
 QuadTreeNode::add_child(QuadTreeNode *child)
 {
   children.push_back(child);
-  children_bb.push_back(DCAST(BoundingBox, child->bounds->make_copy()));
+  children_bb.push_back(child->bounds);
   children_offset_vector.push_back(child->offset_vector);
   children_offset.push_back(child->offset);
 }
