@@ -1068,7 +1068,7 @@ def SquaredDistanceSquarePatch(
     (gvw, gcw, gtw, gnw, gtanw, gbiw, prim, geom) = empty_geom('cube', nb_points, nb_primitives, tanbin=True)
     node.add_geom(geom)
 
-    if offset is not None:
+    if has_offset:
         offset_vector = (
             SquaredDistanceSquarePatchOffsetVector(axes, x0, y0, x1, y1, x_inverted, y_inverted, xy_swap) * offset
         )
@@ -1102,7 +1102,7 @@ def SquaredDistanceSquarePatch(
                 u, v = v, u
             gtw.add_data2(u, v)
             point.componentwise_mult(axes)
-            if offset is not None:
+            if has_offset:
                 point -= offset_vector
             gvw.add_data3(point)
             normal.componentwise_mult(normal_coefs)
@@ -1161,7 +1161,7 @@ def SquaredDistanceSquarePatch(
                     u, v = v, u
                 gtw.add_data2(u, v)
                 point.componentwise_mult(reduced_axes)
-                if offset is not None:
+                if has_offset:
                     point -= offset_vector
                 gvw.add_data3(point)
                 normal.componentwise_mult(normal_coefs)
@@ -1354,7 +1354,7 @@ def NormalizedSquarePatch(
                 u, v = v, u
             gtw.add_data2(u, v)
             point.componentwise_mult(axes)
-            if offset is not None:
+            if has_offset:
                 point -= offset_vector
             gvw.add_data3d(point)
             normal.componentwise_mult(normal_coefs)
@@ -1407,7 +1407,7 @@ def NormalizedSquarePatch(
                     u, v = v, u
                 gtw.add_data2(u, v)
                 point.componentwise_mult(reduced_axes)
-                if offset is not None:
+                if has_offset:
                     point -= offset_vector
                 gvw.add_data3d(point)
                 normal.componentwise_mult(normal_coefs)
