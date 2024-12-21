@@ -27,10 +27,9 @@ from panda3d.egg import EggData, EggVertexPool, EggVertex, EggPolygon, loadEggDa
 from ...pstats import named_pstat
 
 
-def empty_node(prefix, color=False):
-    path = NodePath(prefix + '_path')
-    node = GeomNode(prefix + '_node')
-    path.attachNewNode(node)
+def empty_node(name, color=False):
+    node = GeomNode(name)
+    path = NodePath(node)
     if color:
         path.setAttrib(ColorAttrib.makeVertex())
     return (path, node)
