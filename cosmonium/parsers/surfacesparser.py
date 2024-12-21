@@ -193,7 +193,7 @@ class FlatSurfaceParser(YamlModuleParser):
         max_vertex_size = data.get('max-vertex-size', 128)
         max_lod = data.get('max-lod', 10)
         max_distance = data.get('max-distance', 1.001 * 1024 * sqrt(2))
-        tile_density = data.get('tile-density', settings.patch_constant_density)
+        tile_density = data.get('tile-density', settings.patch_default_density)
         hw_tessellation = data.get('hw-tessellation', False)
 
         shape_data = data.get('shape')
