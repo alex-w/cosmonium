@@ -145,6 +145,7 @@ class ShapeObject(VisibleObject):
 
     def unconfigure_shape(self):
         self.shadows.clear_shadows()
+        self.remove_all_shadows()
 
     def set_scale(self, scale):
         self.shape.set_scale(scale)
@@ -250,10 +251,11 @@ class ShapeObject(VisibleObject):
         self.shadow_casters[light_source.source].create()
 
     def remove_all_shadows(self):
-        for shadow_caster in self.shadow_casters.values():
-            shadow_caster.remove()
-        self.owner.set_visibility_override(False)
-        self.shadow_casters = {}
+        for target, shadow_caster in list(self.shadow_casters.items()):
+            if not shadow_caster.is_analytic():
+                shadow_caster.remove()
+                self.owner.set_visibility_override(False)
+                del self.shadow_casters[target]
 
     def start_shadows_update(self):
         self.shadows.start_update()
