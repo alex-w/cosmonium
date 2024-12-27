@@ -788,6 +788,11 @@ class PatchedShapeBase(Shape):
             # The cullling frustum is scaled with the scene_scale_factor, the generated geometry is then too small
             # we must undo this scaling
             self.frustum_node.set_scale(1 / owner.scene_anchor.scene_scale_factor)
+        if settings.debug_lod_show_bb:
+            for patch in self.patches:
+                if patch.bounds_shape.instance is not None:
+                    patch.bounds_shape.update_instance(self.tbn_rot_inv)
+                    patch.bounds_shape.instance.set_quat(LQuaternion(*self.tbn_rot))
 
     def xform_cam_to_model(self, camera_pos):
         pass
