@@ -817,6 +817,7 @@ class PatchedShapeBase(Shape):
 
     @pstat
     def update_lod(self, camera_pos, distance_to_obs, pixel_size, appearance):
+        self.update_model_body_center_offset()
         if settings.debug_lod_freeze:
             return [], []
         if self.instance is None:
@@ -825,7 +826,6 @@ class PatchedShapeBase(Shape):
         if distance_to_obs < min_radius:
             print("Too low !")
             return [], []
-        self.update_model_body_center_offset()
         (model_camera_pos, model_camera_vector, coord) = self.xform_cam_to_model(camera_pos)
         (tangent, binormal, normal) = self.parent.get_tangent_plane_under(model_camera_pos * self.parent.height_scale)
         tbn = LMatrix3d(tangent, -normal, binormal)
