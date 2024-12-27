@@ -50,6 +50,13 @@ PatchBoundingBox::create_bounding_volume(LQuaterniond rot, LVector3d offset)
 
 
 void
+PatchBoundingBox::set_points(const PTA_LVecBase3d &points)
+{
+    this->points = points;
+}
+
+
+void
 PatchBoundingBox::xform(LMatrix3d mat)
 {
     PTA_LVecBase3::iterator it;

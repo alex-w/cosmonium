@@ -33,6 +33,7 @@ PUBLISHED:
     PatchBoundingBox(const PTA_LVecBase3d &points);
     virtual ~PatchBoundingBox(void);
 
+    void set_points(const PTA_LVecBase3d &points);
     BoundingBox *create_bounding_volume(LQuaterniond rot, LVector3d offset);
     void xform(LMatrix3d mat);
 

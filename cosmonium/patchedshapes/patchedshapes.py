@@ -138,6 +138,11 @@ class PatchFactory:
     def create_patch(self, parent, lod, x, y):
         pass
 
+    def patch_done(self, patch, early):
+        if not early:
+            (min_height, max_height, _mean_height) = self.get_patch_limits(patch)
+            patch.update_heights(self.owner.axes, min_height, max_height)
+
 
 class PatchBase(Shape):
     coord = None
@@ -211,6 +216,9 @@ class PatchBase(Shape):
             self.instance.unstash()
         for layer in self.layers:
             layer.patch_done(self, early)
+
+    def update_heights(self, axes, min_height, max_height):
+        pass
 
     def create_geometry_instance(self, tasks_tree):
         for layer in self.layers:
@@ -321,6 +329,13 @@ class SpherePatch(PatchBase):
         self.quadtree_node = QuadTreeNode(
             self, self.lod, self.density, centre, length, offset_vector, self.offset, bounding_volume
         )
+
+    def update_heights(self, axes, min_height, max_height):
+        scale = max(*axes)
+        points = geometry.UVPatchBoundingPoints(
+            axes / scale, min_height, max_height, self.x0, self.y0, self.x1, self.y1, offset=self.offset
+        )
+        self.quadtree_node.bounds.set_points(points)
 
     def str_id(self):
         return "%d - %d %d" % (self.lod, self.x, self.y)
@@ -762,6 +777,7 @@ class PatchedShapeBase(Shape):
             linked_object.patch_done(patch, early)
         if self.data_store is not None:
             self.data_store.update_patch(patch)
+        self.factory.patch_done(patch, early)
 
     def place_patches(self, owner):
         if self.frustum_node is not None:
