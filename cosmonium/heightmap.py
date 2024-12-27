@@ -113,14 +113,11 @@ class HeightmapPatch(PatchData):
         self.parent.filter.update_texture_config(texture_config)
         return texture_config
 
-    def retrieve_texture_data(self):
-        self.texture_peeker = self.texture.peek()
-        #       if self.texture_peeker is None:
-        #           print("NOT READY !!!")
-        data = self.texture.getRamImage()
+    def map_texture(self):
+        data = self.texture.get_ram_image()
         # TODO: should be completed and refactored
         signed = False
-        component_type = self.texture.getComponentType()
+        component_type = self.texture.get_component_type()
         if component_type == Texture.T_float:
             buffer_type = numpy.float32
             scale = 1.0
@@ -139,10 +136,17 @@ class HeightmapPatch(PatchData):
                 buffer_type = numpy.uint16
                 scale = 65535.0
         np_buffer = numpy.frombuffer(data, buffer_type)
-        np_buffer.shape = (self.texture.getYSize(), self.texture.getXSize(), self.texture.getNumComponents())
-        self.min_height = np_buffer.min() / scale
-        self.max_height = np_buffer.max() / scale
-        self.mean_height = np_buffer.mean() / scale
+        np_buffer.shape = (self.texture.get_y_size(), self.texture.get_x_size(), self.texture.get_num_components())
+        return np_buffer, scale
+
+    def retrieve_texture_data(self):
+        self.texture_peeker = self.texture.peek()
+        #       if self.texture_peeker is None:
+        #           print("NOT READY !!!")
+        np_buffer, value_scale = self.map_texture()
+        self.min_height = np_buffer.min() / value_scale
+        self.max_height = np_buffer.max() / value_scale
+        self.mean_height = np_buffer.mean() / value_scale
 
     def make_default_data(self):
         texture = Texture()
@@ -150,6 +154,36 @@ class HeightmapPatch(PatchData):
         texture.set_clear_color(LColor(0, 0, 0, 0))
         texture.make_ram_image()
         return texture
+
+    def calc_sub_patch(self, parent_data):
+        PatchData.calc_sub_patch(self, parent_data)
+        if self.data_lod < self.patch.lod:
+            delta = self.patch.lod - self.data_lod
+            scale = 1 << delta
+            if self.patch.coord != TexCoord.Flat:
+                x_tex = (self.patch.x // scale) * scale
+                y_tex = (self.patch.y // scale) * scale
+                x_delta = (self.patch.x - x_tex) / scale
+                y_delta = (self.patch.y - y_tex) / scale
+            else:
+                x_delta = (self.patch.x - self.data_patch.x) / self.data_patch.size
+                y_delta = (self.patch.y - self.data_patch.y) / self.data_patch.size
+            # TODO: Should be set to the size of the heightmap filter
+            extra = 2
+            start = (
+                max(int(self.overlap + x_delta * (self.r_width + 1)) - extra, 0),
+                max(int(self.overlap + y_delta * (self.r_height + 1)) - extra, 0),
+            )
+            size = (
+                max(int((self.r_width + 1) / scale) + extra * 2, 1),
+                max(int((self.r_height + 1) / scale) + extra * 2, 1),
+            )
+            end = (min(start[0] + size[0], self.width - 1), min(start[1] + size[1], self.height - 1))
+            np_buffer, value_scale = self.map_texture()
+            np_buffer = np_buffer[start[1] : end[1], start[0] : end[0]]
+            self.min_height = np_buffer.min() / value_scale
+            self.max_height = np_buffer.max() / value_scale
+            self.mean_height = np_buffer.mean() / value_scale
 
 
 class TextureHeightmapPatch(HeightmapPatch):
